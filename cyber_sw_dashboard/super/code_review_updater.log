@@ -1,0 +1,233 @@
+INFO     ======================================================================
+INFO     Code Review Updater - Starting Workflow
+INFO     ======================================================================
+INFO     
+======================================================================
+INFO     STEP 1: Downloading files from SharePoint (PARALLEL)
+INFO     ======================================================================
+INFO     No saved session found at: C:\Users\e480545\Scripts\Code Review Updater\super\sp_session.json
+INFO     Opening browser for login…
+INFO     User confirmed login.
+INFO     Session saved to: C:\Users\e480545\Scripts\Code Review Updater\super\sp_session.json
+INFO     No saved session found at: C:\Users\e480545\Scripts\Code Review Updater\super\sp_dest_session.json
+INFO     Opening browser for login…
+INFO     User confirmed login.
+INFO     Session saved to: C:\Users\e480545\Scripts\Code Review Updater\super\sp_dest_session.json
+INFO     Downloading: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx?download=1
+INFO     Downloading: https://space-us.external.lmco.com/sites/ngi/fa/Software/Software/01-Common-Folder/NGI FSW Formal Review Status.xlsx?download=1
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: NGI FSW Formal Review Status.xlsx
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: Testing New Code Review Tracker.xlsx
+INFO     Saved to: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx (209.8 KB)
+INFO     Saved to: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx (452.4 KB)
+INFO     ✓ Downloaded destination to: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     ✓ Downloaded source to: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     
+✓ Dashboard file ready: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     
+======================================================================
+INFO     STEP 2: Processing and categorizing data
+INFO     ======================================================================
+INFO     Reading from: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     Rows routed:
+INFO       Code    : 673
+INFO       Design  : 192
+INFO       Test    : 0
+INFO       Other   : 61
+INFO       ignored  : 297
+INFO     ✓ Processed data saved to: C:\Users\e480545\AppData\Local\Temp\1\tmpwxwl7rna.xlsx
+INFO     
+======================================================================
+INFO     STEP 3: Checking for duplicates and uploading
+INFO     ======================================================================
+INFO       Sheet 'Code': Max Review # = 105708
+INFO       Sheet 'Code': 1 new rows to upload
+INFO       Sheet 'Design': Max Review # = 105681
+INFO       Sheet 'Design': 0 new rows to upload
+INFO       Sheet 'Other': Max Review # = 105626
+INFO       Sheet 'Other': 1 new rows to upload
+INFO     
+Uploading 2 new rows...
+INFO     Found table 'Table3' with range B3:I24
+INFO     Expanded table to B3:I25
+INFO     Appended 1 rows to 'Code' starting at row 25
+INFO     Found table 'Table325' with range B3:G63
+INFO     Expanded table to B3:G64
+INFO     Appended 1 rows to 'Other' starting at row 64
+INFO     Uploading to SharePoint...
+INFO     File size: 108.68 KB
+INFO     Upload endpoint: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/_api/web/GetFolderByServerRelativeUrl('/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support')/Files/add(url='Testing New Code Review Tracker.xlsx',overwrite=true)
+INFO     Form digest obtained successfully
+INFO     File uploaded successfully!
+INFO     ✓ Successfully uploaded all data to SharePoint!
+INFO     ✓ Updated local file: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     
+======================================================================
+INFO     ✓ WORKFLOW COMPLETED SUCCESSFULLY
+INFO     ======================================================================
+INFO     ======================================================================
+INFO     Code Review Updater - Starting Workflow
+INFO     ======================================================================
+INFO     
+======================================================================
+INFO     STEP 1: Downloading files from SharePoint (PARALLEL)
+INFO     ======================================================================
+INFO     Checking saved session...
+INFO     Session is valid.
+INFO     Checking saved session...
+INFO     Session is valid.
+INFO     Downloading: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx?download=1
+INFO     Downloading: https://space-us.external.lmco.com/sites/ngi/fa/Software/Software/01-Common-Folder/NGI FSW Formal Review Status.xlsx?download=1
+INFO     Download started: Testing New Code Review Tracker.xlsx
+ERROR    Download did not start
+ERROR      URL attempted: https://space-us.external.lmco.com/sites/ngi/fa/Software/Software/01-Common-Folder/NGI FSW Formal Review Status.xlsx?download=1
+ERROR      HTTP Status: 200
+ERROR      Current page: https://auth.p.external.lmco.com/idp/SSO.saml2
+ERROR      Page title: Choose Identity Provider
+ERROR    ✗ Failed to download source
+INFO     Deleting existing file: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     Saved to: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx (452.1 KB)
+INFO     ======================================================================
+INFO     Code Review Updater - Starting Workflow
+INFO     ======================================================================
+INFO     
+======================================================================
+INFO     STEP 1: Downloading files from SharePoint (PARALLEL)
+INFO     ======================================================================
+INFO     Checking saved session...
+INFO     Session is valid.
+INFO     Checking saved session...
+INFO     Session is valid.
+INFO     Downloading: https://space-us.external.lmco.com/sites/ngi/fa/Software/Software/01-Common-Folder/NGI FSW Formal Review Status.xlsx?download=1
+INFO     Downloading: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx?download=1
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: NGI FSW Formal Review Status.xlsx
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: Testing New Code Review Tracker.xlsx
+INFO     Deleting existing file: c:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     Saved to: c:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx (210.0 KB)
+INFO     Deleting existing file: c:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     Saved to: c:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx (452.1 KB)
+INFO     ✓ Downloaded destination to: c:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     ✓ Downloaded source to: c:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     
+✓ Dashboard file ready: c:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     
+======================================================================
+INFO     STEP 2: Processing and categorizing data
+INFO     ======================================================================
+INFO     Reading from: c:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     Rows routed:
+INFO       Code    : 674
+INFO       Design  : 192
+INFO       Test    : 0
+INFO       Other   : 61
+INFO       ignored  : 297
+INFO     ✓ Processed data saved to: C:\Users\e480545\AppData\Local\Temp\1\tmp7p3wee92.xlsx
+INFO     
+======================================================================
+INFO     STEP 3: Checking for duplicates and uploading
+INFO     ======================================================================
+INFO       Sheet 'Code': Max Review # = 105711
+INFO       Sheet 'Code': 1 new rows to upload
+INFO       Sheet 'Design': Max Review # = 105681
+INFO       Sheet 'Design': 0 new rows to upload
+INFO       Sheet 'Other': Max Review # = 105712
+INFO       Sheet 'Other': 0 new rows to upload
+INFO     
+Uploading 1 new rows...
+INFO     Found table 'Table3' with range B3:I25
+INFO     Expanded table to B3:I26
+INFO     Appended 1 rows to 'Code' starting at row 26
+INFO     Uploading to SharePoint...
+INFO     File size: 108.70 KB
+INFO     Upload endpoint: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/_api/web/GetFolderByServerRelativeUrl('/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support')/Files/add(url='Testing New Code Review Tracker.xlsx',overwrite=true)
+INFO     Form digest obtained successfully
+INFO     File uploaded successfully!
+INFO     ✓ Successfully uploaded all data to SharePoint!
+INFO     ✓ Updated local file: c:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     
+======================================================================
+INFO     ✓ WORKFLOW COMPLETED SUCCESSFULLY
+INFO     ======================================================================
+INFO     ======================================================================
+INFO     Code Review Updater - Starting Workflow
+INFO     ======================================================================
+INFO     
+======================================================================
+INFO     STEP 1: Downloading files from SharePoint (PARALLEL)
+INFO     ======================================================================
+INFO     No saved session found at: C:\Users\e480545\Scripts\Code Review Updater\super\..\sp_session.json
+INFO     Opening browser for login…
+INFO     User confirmed login.
+INFO     Session saved to: C:\Users\e480545\Scripts\Code Review Updater\super\..\sp_session.json
+INFO     Checking saved session...
+INFO     Session is valid.
+INFO     Downloading: https://space-us.external.lmco.com/sites/ngi/fa/Software/Software/01-Common-Folder/NGI FSW Formal Review Status.xlsx?download=1
+INFO     Downloading: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx?download=1
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: NGI FSW Formal Review Status.xlsx
+INFO     Saved to: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx (211.2 KB)
+INFO     ✓ Downloaded source to: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+ERROR    Download did not start
+ERROR      URL attempted: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx?download=1
+ERROR      HTTP Status: 200
+ERROR      Current page: https://login.microsoftonline.us/b18f006c-b0fc-467d-b23a-a35b5695b5dc/oauth2/authorize?client%5Fid=00000003%2D0000%2D0ff1%2Dce00%2D000000000000&response%5Fmode=form%5Fpost&ear%5Fjwe%5Fcrypto=eyJhbGciOiJFQ0RILUVTIiwiZW5jIjoiQTI1NkdDTSIsImFwdiI6IkFBQUFDVVZoY2tOc2FXVnVkR2dBQUFCRlEwc3pNQUFBQUZVRFNlNEhiTjRvemNwSGRRdDNQQ09sS2NzbXRYMmFLbis1UWNSZ2FneThXMmo1dWxmSFNlaXVLK1c0bG1IWklCUDF2T05LMFZ4VHZaazFSZHVNMFo4ZU5QaHVlcFpGd0Y1bWFkMmZaVTRIM1krU3picmhqbDNsUXNJRzVOLzhEQUFBQUJqbHQ0MGRGTUlUT0dISFo3RFd5KzBlUHVXNm5rajFPbUk9In0%3D&ear%5Fjwk=eyJhbGciOiJFQ0RILUVTIiwiY3J2IjoiUC0zODQiLCJ4IjoiQUFBQU1GVURTZTRIYk40b3pjcEhkUXQzUENPbEtjc210WDJhS24rNVFjUmdhZ3k4VzJqNXVsZkhTZWl1SytXNGxtSFpJQT09IiwieSI6IkFBQUFNQlAxdk9OSzBWeFR2WmsxUmR1TTBaOGVOUGh1ZXBaRndGNW1hZDJmWlU0SDNZK1N6YnJoamwzbFFzSUc1Ti84REE9PSIsImt0eSI6IkVDIn0%3D&spa%5Fclient%5Fid=08e18876%2D6177%2D487e%2Db8b5%2Dcf950c1e598c&client%5Finfo=1&response%5Ftype=code%20id%5Ftoken%20spa%5Frt&resource=00000003%2D0000%2D0ff1%2Dce00%2D000000000000&scope=openid&nonce=347C8B63AB19FA558CBF092885113F089E52B8EF5321EB68%2DAF811FF04D8BDC26A9CF261F5D8B96A1D8DB3D787E993E14F033D2ED74225D39&redirect%5Furi=https%3A%2F%2Flmco%2Esharepoint%2Eus%2F%5Fforms%2Fdefault%2Easpx&state=OD0wJjMyPUFBTERiZ0FBQUJSYVdUclQyMEFma3MwQ3k5OUVoJTJGeHQlMkZQJTJCcjVqQnFvJTJCZDAyMEpObGNuRjhibW9tOHV3R0JQRmdpdWhSOFJEZFdlRXlPeVppTkx5N01HZTY0bktueTIlMkIlMkJuOHM1ViUyRk9MNkVSRzFDeFdpWE5mUDRha2ZiZENmaTR0bTRuTTViNSUyQlBNRTZwVHhHMENjYjZXdEk0MnAlMkZUaHMyTDNjdjhyOUVqMnE4MU5vJTJGRnBNbTFtMk13aFB1Nk0zWDNmWENCVURiJTJCOERpVmYxTGY3TVc1UnRGZjlkNWYxdDhOM0xDUlg4NHdWUDJPWmMlMkJoN0k3ZjZDdHR6ME8yVHlnZ0llTnRPJTJCQWQ4OEw5JTJCbTRMN3NFdmZRRFA3czhmRXFMaHN5cTQlMkJ2UGk4b0xtRUZSRlBvTGhsR01JN1lZWTg5cnNTJTJGTXNqakF1WXJKV3k5WXZ1a3czUDlvd0FHRG9YSXpkdUR4SmFCbnpVVWdDSEpwbXFGJTJCaXU5N1AlMkJ0emsybXh3JTNEJTNE&claims=%7B%22id%5Ftoken%22%3A%7B%22xms%5Fcc%22%3A%7B%22values%22%3A%5B%22CP1%22%5D%7D%7D%7D&wsucxt=1&cobrandid=11bd8083%2D87e0%2D41b5%2Dbb78%2D0bc43c8a8e8a&client%2Drequest%2Did=f3cf15a2%2D400e%2D0000%2D469f%2D866f0163bfc2
+ERROR      Page title: Sign in to your account
+ERROR      Redirected to login page - session may have expired
+ERROR    ✗ Failed to download destination
+INFO     ======================================================================
+INFO     Code Review Updater - Starting Workflow
+INFO     ======================================================================
+INFO     
+======================================================================
+INFO     STEP 1: Downloading files from SharePoint (PARALLEL)
+INFO     ======================================================================
+INFO     No saved session found at: C:\Users\e480545\Scripts\Code Review Updater\super\..\sp_session.json
+INFO     Opening browser for login…
+INFO     User confirmed login.
+INFO     Session saved to: C:\Users\e480545\Scripts\Code Review Updater\super\..\sp_session.json
+INFO     No saved session found at: C:\Users\e480545\Scripts\Code Review Updater\super\..\sp_dest_session.json
+INFO     Opening browser for login…
+INFO     User confirmed login.
+INFO     Session saved to: C:\Users\e480545\Scripts\Code Review Updater\super\..\sp_dest_session.json
+INFO     Downloading: https://space-us.external.lmco.com/sites/ngi/fa/Software/Software/01-Common-Folder/NGI FSW Formal Review Status.xlsx?download=1
+INFO     Downloading: https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx?download=1
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: NGI FSW Formal Review Status.xlsx
+INFO     Navigation interrupted by download (expected)
+INFO     Download started: Testing New Code Review Tracker.xlsx
+INFO     Deleting existing file: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     Saved to: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx (211.2 KB)
+INFO     Saved to: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx (341.7 KB)
+INFO     ✓ Downloaded source to: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     ✓ Downloaded destination to: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     
+✓ Dashboard file ready: C:\Users\e480545\Scripts\Code Review Updater\super\destination_current.xlsx
+INFO     
+======================================================================
+INFO     STEP 2: Processing and categorizing data
+INFO     ======================================================================
+INFO     Reading from: C:\Users\e480545\Scripts\Code Review Updater\super\NGI FSW Formal Review Status.xlsx
+INFO     Rows routed:
+INFO       Code    : 674
+INFO       Design  : 192
+INFO       Test    : 0
+INFO       Other   : 61
+INFO       ignored  : 297
+INFO     ✓ Processed data saved to: C:\Users\e480545\AppData\Local\Temp\1\tmpsv5nru4l.xlsx
+INFO     
+======================================================================
+INFO     STEP 3: Checking for duplicates and uploading
+INFO     ======================================================================
+INFO       Sheet 'Code': Max Review # = 105715
+INFO       Sheet 'Code': 0 new rows to upload
+INFO       Sheet 'Design': Max Review # = 105681
+INFO       Sheet 'Design': 0 new rows to upload
+INFO       Sheet 'Other': Max Review # = 105712
+INFO       Sheet 'Other': 0 new rows to upload
+INFO     
+======================================================================
+INFO     ✓ NO NEW DATA - All rows already exist!
+INFO     ======================================================================
