@@ -28,8 +28,15 @@ SOURCE_CONFIG = {
     "session_file": str(Path(__file__).parent / "sp_session.json"),
 }
 
-# Destination SharePoint configuration - where we upload processed data
-DEST_CONFIG = {
+# Read from production file for dashboard display
+DEST_READ_CONFIG = {
+    "site_url": "https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software",
+    "file_path": "/Shared Documents/General/Software Support/New Code Review Tracker.xlsx",
+    "session_file": str(Path(__file__).parent / "sp_dest_session.json"),
+}
+
+# Upload to testing file (staging area before manual update to production)
+DEST_UPLOAD_CONFIG = {
     "site_url": "https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software",
     "file_path": "/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx",
     "session_file": str(Path(__file__).parent / "sp_dest_session.json"),
@@ -45,20 +52,51 @@ LOG_FILE = str(Path(__file__).parent / "code_review_updater.log")
 # ============================================================================
 
 class ColoredFormatter(logging.Formatter):
-    """Custom formatter that adds color to log level names for terminal output."""
-    
     COLORS = {
         'INFO': '\033[92m',
         'ERROR': '\033[91m',
         'WARNING': '\033[93m',
-        'RESET': '\033[0m'
+        'DEBUG': '\033[94m',
+        'SECTION': '\033[96m',
+        'SUCCESS': '\033[92m',
+        'PROMPT': '\033[95m',
+        'SEPARATOR': '\033[90m',
+        'RESET': '\033[0m',
     }
-    
+
     def format(self, record):
-        levelname = record.levelname
-        if levelname in self.COLORS:
-            record.levelname = f"{self.COLORS[levelname]}{levelname}{self.COLORS['RESET']}"
-        return super().format(record)
+        original_levelname = record.levelname
+        if original_levelname in self.COLORS:
+            record.levelname = f"{self.COLORS[original_levelname]}{original_levelname}{self.COLORS['RESET']}"
+
+        formatted = super().format(record)
+
+        message = record.getMessage()
+        msg_stripped = str(message).strip()
+        color = None
+
+        if msg_stripped.startswith("STEP "):
+            color = self.COLORS['SECTION']
+        elif msg_stripped and set(msg_stripped) == {"="}:
+            color = self.COLORS['SECTION']
+        elif msg_stripped.startswith("✓") or "WORKFLOW COMPLETED" in message:
+            color = self.COLORS['SUCCESS']
+        elif msg_stripped.startswith("✗"):
+            color = self.COLORS['ERROR']
+        elif "NO NEW DATA" in message:
+            color = self.COLORS['WARNING']
+        elif "ACTION REQUIRED" in message or "Press ENTER" in message:
+            color = self.COLORS['PROMPT']
+
+        if color is None:
+            if original_levelname == 'ERROR':
+                color = self.COLORS['ERROR']
+            elif original_levelname == 'WARNING':
+                color = self.COLORS['WARNING']
+
+        if color:
+            return f"{color}{formatted}{self.COLORS['RESET']}"
+        return formatted
 
 def setup_logging():
     """Configure logging to output to both file and console."""
@@ -153,12 +191,14 @@ def authenticate(playwright, session_path: Path, site_url: str) -> bool:
         bool: True if authentication successful, False otherwise
     """
     logging.info("Opening browser for login…")
-    print("\n" + "=" * 70)
-    print(" ACTION REQUIRED: Browser opening for SharePoint login.")
-    print(" 1. Log in and complete MFA")
-    print(" 2. Navigate to your SharePoint site if not redirected")
-    print(" 3. Press ENTER here after successful login")
-    print("=" * 70 + "\n")
+    colors = ColoredFormatter.COLORS
+    sep_line = "=" * 70
+    print(f"\n{colors['SECTION']}{sep_line}{colors['RESET']}")
+    print(f"{colors['PROMPT']} ACTION REQUIRED: Browser opening for SharePoint login.{colors['RESET']}")
+    print(f"{colors['PROMPT']} 1. Log in and complete MFA{colors['RESET']}")
+    print(f"{colors['PROMPT']} 2. Navigate to your SharePoint site if not redirected{colors['RESET']}")
+    print(f"{colors['PROMPT']} 3. Press ENTER here after successful login{colors['RESET']}")
+    print(f"{colors['SECTION']}{sep_line}{colors['RESET']}\n")
 
     browser = None
     try:
@@ -876,16 +916,16 @@ def main():
             logging.info(f"Using existing file: {source_file} ({size_kb:.1f} KB)")
             
             # Download destination for comparison
-            dest_session_path = Path(DEST_CONFIG["session_file"])
-            session_ok = check_session_valid(playwright, dest_session_path, DEST_CONFIG["site_url"])
+            dest_session_path = Path(DEST_READ_CONFIG["session_file"])
+            session_ok = check_session_valid(playwright, dest_session_path, DEST_READ_CONFIG["site_url"])
             if not session_ok:
-                success = authenticate(playwright, dest_session_path, DEST_CONFIG["site_url"])
+                success = authenticate(playwright, dest_session_path, DEST_READ_CONFIG["site_url"])
                 if not success:
                     sys.exit(1)
             
             success = download_file_from_sharepoint(
                 playwright, dest_session_path, 
-                DEST_CONFIG["site_url"], DEST_CONFIG["file_path"], 
+                DEST_READ_CONFIG["site_url"], DEST_READ_CONFIG["file_path"], 
                 str(dest_file)
             )
             if not success:
@@ -899,7 +939,7 @@ def main():
             logging.info("=" * 70)
             
             source_session_path = Path(SOURCE_CONFIG["session_file"])
-            dest_session_path = Path(DEST_CONFIG["session_file"])
+            dest_session_path = Path(DEST_READ_CONFIG["session_file"])
             
             # Validate sessions
             session_ok = check_session_valid(playwright, source_session_path, SOURCE_CONFIG["site_url"])
@@ -908,9 +948,9 @@ def main():
                 if not success:
                     sys.exit(1)
             
-            session_ok = check_session_valid(playwright, dest_session_path, DEST_CONFIG["site_url"])
+            session_ok = check_session_valid(playwright, dest_session_path, DEST_READ_CONFIG["site_url"])
             if not session_ok:
-                success = authenticate(playwright, dest_session_path, DEST_CONFIG["site_url"])
+                success = authenticate(playwright, dest_session_path, DEST_READ_CONFIG["site_url"])
                 if not success:
                     sys.exit(1)
             
@@ -928,7 +968,7 @@ def main():
                 with sync_playwright() as pw:
                     success = download_file_from_sharepoint(
                         pw, dest_session_path,
-                        DEST_CONFIG["site_url"], DEST_CONFIG["file_path"],
+                        DEST_READ_CONFIG["site_url"], DEST_READ_CONFIG["file_path"],
                         str(dest_file)
                     )
                     return ("destination", success, str(dest_file))
@@ -1043,11 +1083,67 @@ def main():
         if total_rows == 0:
             logging.info("\n" + "=" * 70)
             logging.info("✓ NO NEW DATA - All rows already exist!")
+            logging.info("  Browser tabs will NOT be opened (no new data)")
             logging.info("=" * 70)
             os.remove(processed_file)
             return
         
-        logging.info(f"\nUploading {total_rows} new rows...")
+        logging.info(f"\nFound {total_rows} rows new to production file...")
+        
+        # Download testing file to check if these rows already exist there
+        logging.info("Checking testing file for duplicates...")
+        testing_file = Path(__file__).parent / "testing_comparison.xlsx"
+        dest_session_path = Path(DEST_UPLOAD_CONFIG["session_file"])
+        success = download_file_from_sharepoint(
+            playwright, dest_session_path,
+            DEST_UPLOAD_CONFIG["site_url"], DEST_UPLOAD_CONFIG["file_path"],
+            str(testing_file)
+        )
+        
+        if success:
+            # Filter out rows that already exist in testing file
+            testing_wb = openpyxl.load_workbook(testing_file, data_only=True)
+            final_filtered_data = {}
+            
+            for sheet_name in TARGET_SHEETS:
+                if sheet_name not in filtered_data or not filtered_data[sheet_name]:
+                    continue
+                
+                if sheet_name not in testing_wb.sheetnames:
+                    final_filtered_data[sheet_name] = filtered_data[sheet_name]
+                    continue
+                
+                testing_sheet = testing_wb[sheet_name]
+                testing_rows = list(testing_sheet.iter_rows(min_row=4, values_only=True))
+                testing_review_nums = {row[1] for row in testing_rows if row and len(row) > 1 and row[1]}
+                max_testing_review = max(testing_review_nums) if testing_review_nums else 0
+                
+                # Filter out rows that exist in testing
+                new_to_testing = [row for row in filtered_data[sheet_name] if row[1] > max_testing_review]
+                if new_to_testing:
+                    final_filtered_data[sheet_name] = new_to_testing
+                    logging.info(f"  Sheet '{sheet_name}': {len(new_to_testing)} rows new to testing (filtered from {len(filtered_data[sheet_name])})")
+                else:
+                    logging.info(f"  Sheet '{sheet_name}': 0 rows new to testing (all {len(filtered_data[sheet_name])} already in testing)")
+            
+            testing_wb.close()
+            os.remove(testing_file)
+            filtered_data = final_filtered_data
+        else:
+            logging.warning("Could not download testing file - will proceed with all rows")
+        
+        # Final check after filtering against testing file
+        total_rows = sum(len(data) for data in filtered_data.values())
+        if total_rows == 0:
+            logging.info("\n" + "=" * 70)
+            logging.info("✓ NO NEW DATA - All rows already exist in testing file!")
+            logging.info("  Browser tabs will NOT be opened (no new data)")
+            logging.info("=" * 70)
+            os.remove(processed_file)
+            return
+        
+        logging.info(f"\nUploading {total_rows} new rows to testing file...")
+        logging.info("  Browser tabs will be opened after successful upload")
         
         # Append to destination file in a temporary copy
         temp_upload = tempfile.mktemp(suffix='.xlsx')
@@ -1055,20 +1151,16 @@ def main():
         
         append_to_excel_tables(temp_upload, filtered_data)
         
-        # Upload modified file back to SharePoint
-        dest_session_path = Path(DEST_CONFIG["session_file"])
+        # Upload modified file back to SharePoint (to testing file)
+        dest_session_path = Path(DEST_UPLOAD_CONFIG["session_file"])
         success = upload_file_to_sharepoint(
             playwright, dest_session_path,
-            DEST_CONFIG["site_url"], DEST_CONFIG["file_path"],
+            DEST_UPLOAD_CONFIG["site_url"], DEST_UPLOAD_CONFIG["file_path"],
             temp_upload
         )
         
         if success:
             logging.info("✓ Successfully uploaded all data to SharePoint!")
-            
-            # Update local destination_current.xlsx with the uploaded data
-            shutil.copy(temp_upload, dest_file)
-            logging.info(f"✓ Updated local file: {dest_file}")
             
             # Open SharePoint files in browser since new data was added
             open_sharepoint_urls()

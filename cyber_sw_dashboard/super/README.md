@@ -34,18 +34,19 @@ Updates the team's central SharePoint tracker with new code reviews.
 
 ### What It Does
 - Downloads from **source SharePoint** (original review status file)
-- Downloads from **destination SharePoint** (team's central tracker)
+- Downloads from **production tracker** (team's central live tracker)
 - Processes and categorizes reviews
 - Identifies **only new reviews** by comparing Review # against existing entries
-- **Uploads** new rows to the **shared destination SharePoint file**
+- Saves a local copy as `super/destination_current.xlsx`
+- **Uploads** new rows to the **test tracker** (staging "Testing New Code Review Tracker.xlsx")
 
 ### Features
-- 📤 **SharePoint Upload**: Appends new reviews to the central tracker
-- 🔄 **Parallel Downloads**: Simultaneous downloads from both sites
-- 🚫 **Smart Duplicate Detection**: Compares Review # to avoid re-uploading
-- 📂 **Auto-Categorization**: Organizes into Code, Design, Test, and Other sheets
-- 🔐 **Session Management**: Persistent authentication
-- 📝 **Comprehensive Logging**: All operations logged to `code_review_updater.log`
+- SharePoint upload: Appends new reviews to the **test tracker** (staging file)
+- Parallel downloads: Simultaneous downloads from source and production trackers
+- Smart duplicate detection: Compares Review # to avoid re-uploading existing reviews
+- Auto-categorization: Organizes into Code, Design, Test, and Other sheets
+- Session management: Persistent authentication with session files
+- Comprehensive logging: All operations logged to `code_review_updater.log`
 
 ### Coordinator Setup
 Same authentication process as local tools:
@@ -59,7 +60,7 @@ python code_review_updater.py
 
 ### Coordinator Usage
 ```bash
-# Full workflow: download → process → deduplicate → upload to SharePoint
+# Full workflow: download → process → deduplicate → upload to test SharePoint
 python code_review_updater.py
 
 # Skip download if you already have latest files
@@ -67,33 +68,36 @@ python code_review_updater.py --skip-download
 ```
 
 ### Workflow Steps
-1. **Download**: Parallel download from source and destination SharePoint
+1. **Download**: Parallel download from source SharePoint and production tracker
 2. **Process**: Categorize reviews and extract relevant data
 3. **Deduplicate**: Compare Review # to filter out existing entries
-4. **Upload**: Append only new rows to destination SharePoint
+4. **Save Local Copy**: Write updated data to `destination_current.xlsx`
+5. **Upload**: Append only new rows to the **test tracker** on SharePoint
 
 ---
 
 ## 2. `dashboard_app.py` - Basic Dashboard (Optional)
 
-Simple dashboard for viewing the shared tracker without refresh capabilities.
+Simple dashboard for viewing the shared tracker.
 
 ### What It Does
 - Displays outstanding reviews from `destination_current.xlsx` file
 - Groups reviews by repository with expandable cards
 - Color-coded status indicators based on workload
-- Real-time filtering by repository names
+- Real-time filtering by repository names using `user_filters.json`
 
 ### Features
-- 🎨 **Color-Coded Status**: Visual workload indicators
-  - 🔴 Red: 10+ outstanding reports
-  - 🟡 Yellow: 6-9 reports
-  - 🟢 Green: 1-5 reports
-  - 🔵 Blue: 0 reports
-- 🔍 **Real-time Filtering**: Filter by repository name (partial match, case-insensitive)
-- 📊 **Expandable Cards**: Click any repository to see detailed review information
-- 🚫 **Cancelled/Broken Reviews**: Separate view for cancelled or broken reviews
-- ⚡ **Lazy Loading**: Efficient rendering for large datasets
+- Reload button: Reloads data from `super/destination_current.xlsx` (no integrated upload)
+- Color-coded status: Visual workload indicators
+  - Red: 10+ outstanding reports
+  - Yellow: 6-9 reports
+  - Green: 1-5 reports
+  - Blue: 0 reports
+- Real-time filtering: Filter by repository name (partial match, case-insensitive)
+- Expandable cards: Click any repository to see detailed review information
+- Cancelled/Broken reviews: Separate view for reviews where Notes contain "cancelled" or "pipeline"
+- Other reviews: Separate view for reviews with Notes that are not cancelled/pipeline
+- Lazy loading and scrollable layout for large datasets
 
 ### Usage
 ```bash
@@ -101,7 +105,7 @@ python dashboard_app.py
 ```
 
 **Prerequisites:**
-- Must run `code_review_updater.py` first to create `destination_current.xlsx`
+- Must run `code_review_updater.py` first to create `super/destination_current.xlsx`
 
 **Note:** This is a basic viewer. Team members should use `dashboard_local.py` in the `local/` folder for a better experience with integrated refresh.
 
@@ -121,9 +125,18 @@ SOURCE_CONFIG = {
 }
 ```
 
-**Destination SharePoint configuration** (team's central tracker):
+**Production tracker configuration** (team's central tracker):
 ```python
-DEST_CONFIG = {
+DEST_READ_CONFIG = {
+    "site_url": "https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software",
+    "file_path": "/Shared Documents/General/Software Support/New Code Review Tracker.xlsx",
+    ...
+}
+```
+
+**Test tracker configuration** (staging "Testing New Code Review Tracker.xlsx"):
+```python
+DEST_UPLOAD_CONFIG = {
     "site_url": "https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software",
     "file_path": "/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx",
     ...

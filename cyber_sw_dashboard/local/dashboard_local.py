@@ -13,11 +13,19 @@ import json
 import subprocess
 import threading
 import sys
-import logging
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+# CUSTOMIZATION: Update file paths if your data files are in different locations
 
 SCRIPT_DIR = Path(__file__).parent
-DEST_FILE = SCRIPT_DIR / "destination_current.xlsx"
-FILTER_CONFIG = SCRIPT_DIR / "user_filters.json"
+# CUSTOMIZATION: Path to the Excel file containing review data
+DEST_FILE = SCRIPT_DIR / "destination_current.xlsx"  # Main data source file
+# CUSTOMIZATION: Path to the JSON file containing repository filter settings
+FILTER_CONFIG = SCRIPT_DIR / "user_filters.json"  # User filter configuration
+# CUSTOMIZATION: Local updater script to generate the Excel file
+UPDATER_SCRIPT = SCRIPT_DIR / "code_review_local.py"
 
 def format_date_only(value):
     """Extract date without time from various formats"""
@@ -51,22 +59,25 @@ class DashboardApp:
             root: The tkinter root window
         """
         self.root = root
-        self.root.title("Code Review Dashboard")
+        # CUSTOMIZATION: Change window title as desired
+        self.root.title("Code Review Dashboard - Local")
+        # CUSTOMIZATION: Adjust window size (width x height)
         self.root.geometry("400x600")  # Main window dimensions
+        # CUSTOMIZATION: Change background color (hex format)
         self.root.configure(bg="#f0f0f0")  # Light grey background
         
         # Data structures for storing review information
         self.repo_data = {}  # Outstanding reviews grouped by repository
         self.cancelled_data = {}  # Cancelled/broken reviews grouped by repository
+        self.other_data = {}  # Other reviews (notes present but not cancelled/broken)
         self.total_outstanding = 0  # Count of actionable outstanding reviews
         self.total_cancelled = 0  # Count of cancelled/broken reviews
+        self.total_other = 0  # Count of other reviews
         
         # Track which repo cards are expanded in the UI
         self.expanded_repos = set()  # Expanded outstanding repo cards
         self.expanded_cancelled = set()  # Expanded cancelled repo cards in popup
-        
-        # Track refresh process state
-        self.is_refreshing = False
+        self.expanded_other = set()  # Expanded other repo cards in popup
         
         # Load repository filter from config file
         self.user_filter = self.load_user_filter()
@@ -93,18 +104,6 @@ class DashboardApp:
         
         summary_inner = tk.Frame(self.summary_card, bg="#dbeafe")
         summary_inner.pack(fill="x", padx=20, pady=15)  # Inner padding
-        
-        # Status bar (initially hidden)
-        self.status_frame = tk.Frame(self.root, bg="#3b82f6", relief="solid", bd=1)
-        self.status_label = tk.Label(
-            self.status_frame,
-            text="⟳ Refreshing data from SharePoint...",
-            font=("Arial", 11),
-            bg="#3b82f6",
-            fg="white",
-            pady=10
-        )
-        self.status_label.pack(fill="x", padx=20)
         
         summary_label = tk.Label(
             summary_inner,
@@ -146,40 +145,56 @@ class DashboardApp:
         toolbar_frame = tk.Frame(self.root, bg="#f0f0f0")
         toolbar_frame.pack(fill="x", padx=20, pady=(0, 10))
         
-        # Button container for side-by-side layout of equal-sized buttons
-        button_container = tk.Frame(toolbar_frame, bg="#f0f0f0")
-        button_container.pack(expand=True)
+        # First row - Refresh button (full width)
+        refresh_container = tk.Frame(toolbar_frame, bg="#f0f0f0")
+        refresh_container.pack(fill="x", pady=(0, 5))
         
         self.refresh_btn = tk.Button(
-            button_container,
-            text="↻ Refresh Data",
+            refresh_container,
+            text="⭮ Refresh Data",
             command=self.refresh_data,
             font=("Arial", 11), # Refresh button font
             bg="#3b82f6",
             fg="white",
             relief="flat",
             cursor="hand2",
-            padx=20,
-            pady=8,
-            width=15  # Button width for consistent sizing
+            pady=8
         )
-        self.refresh_btn.pack(side="left", padx=(0, 5))  # Right padding between buttons
+        self.refresh_btn.pack(fill="x")
+        
+        # Second row - Cancelled/Broken and Other buttons (split width)
+        button_row = tk.Frame(toolbar_frame, bg="#f0f0f0")
+        button_row.pack(fill="x")
         
         self.cancelled_btn = tk.Button(
-            button_container,
+            button_row,
             text="🚫 Cancelled/Broken",
             command=self.show_cancelled_window,
             font=("Arial", 11), # Cancelled button font
             bg="#6b7280",
             fg="white",
+            disabledforeground="#9ca3af",  # Light gray text when disabled
             relief="flat",
             cursor="hand2",
-            padx=20,
             pady=8,
-            width=15,  # Match refresh button width
             state="disabled"  # Initially disabled until data loads
         )
-        self.cancelled_btn.pack(side="left", padx=(5, 0))
+        self.cancelled_btn.pack(side="left", fill="x", expand=True, padx=(0, 2.5))
+        
+        self.other_btn = tk.Button(
+            button_row,
+            text="📋 Other",
+            command=self.show_other_window,
+            font=("Arial", 11),
+            bg="#6b7280",
+            fg="white",
+            disabledforeground="#9ca3af",  # Light gray text when disabled
+            relief="flat",
+            cursor="hand2",
+            pady=8,
+            state="disabled"  # Initially disabled until data loads
+        )
+        self.other_btn.pack(side="left", fill="x", expand=True, padx=(2.5, 0))
         
         # Canvas with Scrollbar for Repository List - main scrollable content area
         canvas_frame = tk.Frame(self.root, bg="#f0f0f0")
@@ -254,281 +269,72 @@ class DashboardApp:
             return []
     
     def refresh_data(self):
-        """Run code_review_local.py in background and update display when complete."""
-        if self.is_refreshing:
-            messagebox.showinfo("Refresh In Progress", "Data refresh is already in progress.")
-            return
+        """Run code review updater then load data.
         
-        # Show status bar
-        self.status_frame.pack(fill="x", padx=20, pady=(0, 10), after=self.summary_card.master)
-        self.status_label.config(text="⟳ Refreshing data from SharePoint...")
+        Executes code_review_local.py in background thread,
+        then loads the updated Excel data.
+        """
+        # Disable buttons during refresh
+        self.refresh_btn.config(state="disabled", text="⭮ Updating...")
+        self.cancelled_btn.config(state="disabled")
+        self.other_btn.config(state="disabled")
         
-        # Disable refresh button
-        self.refresh_btn.config(state="disabled")
-        self.is_refreshing = True
+        # Update UI to show progress
+        self.empty_label.config(text="Running code review updater...\nThis may take a moment.")
+        self.empty_label.pack(pady=50)
         
-        # Run in background thread
-        thread = threading.Thread(target=self._run_code_review_local, daemon=True)
+        def run_updater():
+            """Run the updater script in a subprocess."""
+            try:
+                # Run the code_review_local.py script
+                result = subprocess.run(
+                    [sys.executable, str(UPDATER_SCRIPT)],
+                    capture_output=True,
+                    text=True,
+                    cwd=str(SCRIPT_DIR)
+                )
+                
+                # Schedule UI update on main thread
+                self.root.after(0, lambda: self.on_updater_complete(result))
+                
+            except Exception as e:
+                # Schedule error handling on main thread
+                self.root.after(0, lambda: self.on_updater_error(str(e)))
+        
+        # Run updater in background thread
+        thread = threading.Thread(target=run_updater, daemon=True)
         thread.start()
     
-    def _run_code_review_local(self):
-        """Execute code_review_local.py as subprocess."""
-        try:
-            script_path = SCRIPT_DIR / "code_review_local.py"
-            
-            if not script_path.exists():
-                self.root.after(0, self._refresh_complete, False, "code_review_local.py not found", "")
-                return
-            
-            # Update status
-            self.root.after(0, lambda: self.status_label.config(text="⟳ Refreshing..."))
-            
-            # Run the script
-            result = subprocess.run(
-                [sys.executable, str(script_path)],
-                capture_output=True,
-                text=True,
-                cwd=str(SCRIPT_DIR)
+    def on_updater_complete(self, result):
+        """Handle completion of updater script.
+        
+        Args:
+            result: subprocess.CompletedProcess result
+        """
+        if result.returncode != 0:
+            error_msg = result.stderr if result.stderr else "Unknown error occurred"
+            messagebox.showerror(
+                "Updater Failed",
+                f"Code review updater failed:\n\n{error_msg[:500]}"
             )
-            
-            if result.returncode == 0:
-                self.root.after(0, self._refresh_complete, True, None, None)
-            else:
-                # Capture both stdout and stderr for detailed error context
-                stdout_text = result.stdout if result.stdout else ""
-                stderr_text = result.stderr if result.stderr else ""
-                
-                # Build a comprehensive error message
-                full_output = ""
-                if stdout_text:
-                    full_output += stdout_text
-                if stderr_text:
-                    if full_output:
-                        full_output += "\n"
-                    full_output += stderr_text
-                
-                error_summary = self._parse_error_summary(full_output)
-                self.root.after(0, self._refresh_complete, False, error_summary, full_output)
         
-        except Exception as e:
-            self.root.after(0, self._refresh_complete, False, str(e), "")
-    
-    def _parse_error_summary(self, output):
-        """Parse error output to create a user-friendly summary."""
-        if not output:
-            return "Unknown error occurred"
-        
-        # Look for specific error patterns
-        lines = output.split('\n')
-        error_lines = []
-        
-        for line in lines:
-            line_lower = line.lower()
-            # Capture key error indicators
-            if any(keyword in line_lower for keyword in ['error', 'failed', 'timeout', 'denied', 'not found']):
-                # Extract the meaningful part
-                if 'ERROR' in line:
-                    # Extract after the log level
-                    parts = line.split('ERROR', 1)
-                    if len(parts) > 1:
-                        error_lines.append(parts[1].strip())
-                elif line.strip():
-                    error_lines.append(line.strip())
-        
-        if error_lines:
-            # Return first few error lines as summary
-            return '\n'.join(error_lines[:5])
-        
-        # If no specific errors found, return last few lines
-        non_empty = [l for l in lines if l.strip()]
-        if non_empty:
-            return '\n'.join(non_empty[-5:])
-        
-        return "Unknown error occurred"
-    
-    def _refresh_complete(self, success, error_summary, full_output):
-        """Handle completion of refresh process."""
-        self.is_refreshing = False
-        self.refresh_btn.config(state="normal")
-        
-        if success:
-            self.status_label.config(text="✓ Refresh complete! Loading updated data...")
-            self.root.after(1000, self._hide_status_and_load)
-        else:
-            self.status_label.config(
-                text=f"✗ Refresh failed",
-                bg="#dc2626"
-            )
-            self.root.after(3000, self._hide_status_bar)
-            self._show_error_dialog(error_summary, full_output)
-    
-    def _show_error_dialog(self, error_summary, full_output):
-        """Show detailed error dialog with option to view full log."""
-        error_window = tk.Toplevel(self.root)
-        error_window.title("Download Failed - Error Details")
-        error_window.geometry("700x500")
-        error_window.configure(bg="#f9fafb")
-        
-        # Header
-        header_frame = tk.Frame(error_window, bg="#fef2f2", relief="solid", bd=1)
-        header_frame.pack(fill="x", padx=20, pady=20)
-        
-        header_inner = tk.Frame(header_frame, bg="#fef2f2")
-        header_inner.pack(fill="x", padx=20, pady=15)
-        
-        error_icon = tk.Label(
-            header_inner,
-            text="⚠",
-            font=("Arial", 24),
-            bg="#fef2f2",
-            fg="#dc2626"
-        )
-        error_icon.pack()
-        
-        title_label = tk.Label(
-            header_inner,
-            text="Download Failed",
-            font=("Arial", 16, "bold"),
-            bg="#fef2f2",
-            fg="#dc2626"
-        )
-        title_label.pack(pady=(10, 0))
-        
-        subtitle_label = tk.Label(
-            header_inner,
-            text="Failed to refresh data from SharePoint",
-            font=("Arial", 10),
-            bg="#fef2f2",
-            fg="#991b1b"
-        )
-        subtitle_label.pack(pady=(5, 0))
-        
-        # Error summary section
-        summary_frame = tk.Frame(error_window, bg="#ffffff", relief="solid", bd=1)
-        summary_frame.pack(fill="both", expand=True, padx=20, pady=(0, 10))
-        
-        summary_label = tk.Label(
-            summary_frame,
-            text="Error Summary:",
-            font=("Arial", 11, "bold"),
-            bg="#ffffff",
-            fg="#374151",
-            anchor="w"
-        )
-        summary_label.pack(fill="x", padx=15, pady=(15, 5))
-        
-        # Scrollable text area for error details
-        text_frame = tk.Frame(summary_frame, bg="#ffffff")
-        text_frame.pack(fill="both", expand=True, padx=15, pady=(0, 15))
-        
-        scrollbar = tk.Scrollbar(text_frame)
-        scrollbar.pack(side="right", fill="y")
-        
-        error_text = scrolledtext.ScrolledText(
-            text_frame,
-            font=("Consolas", 9),
-            bg="#f9fafb",
-            fg="#374151",
-            wrap="word",
-            relief="flat",
-            yscrollcommand=scrollbar.set,
-            height=15
-        )
-        error_text.pack(side="left", fill="both", expand=True)
-        scrollbar.config(command=error_text.yview)
-        
-        # Insert error summary
-        error_text.insert("1.0", error_summary)
-        error_text.config(state="disabled")
-        
-        # Action buttons
-        button_frame = tk.Frame(error_window, bg="#f9fafb")
-        button_frame.pack(fill="x", padx=20, pady=(0, 20))
-        
-        def show_full_log():
-            """Show full log output in a new window."""
-            log_window = tk.Toplevel(error_window)
-            log_window.title("Full Error Log")
-            log_window.geometry("800x600")
-            log_window.configure(bg="#ffffff")
-            
-            log_label = tk.Label(
-                log_window,
-                text="Complete Output Log:",
-                font=("Arial", 11, "bold"),
-                bg="#ffffff",
-                fg="#374151",
-                anchor="w"
-            )
-            log_label.pack(fill="x", padx=20, pady=(20, 10))
-            
-            log_frame = tk.Frame(log_window, bg="#ffffff")
-            log_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
-            
-            log_text = scrolledtext.ScrolledText(
-                log_frame,
-                font=("Consolas", 9),
-                bg="#f9fafb",
-                fg="#374151",
-                wrap="word",
-                relief="solid",
-                bd=1
-            )
-            log_text.pack(fill="both", expand=True)
-            log_text.insert("1.0", full_output if full_output else "No output captured")
-            log_text.config(state="disabled")
-            
-            close_log_btn = tk.Button(
-                log_window,
-                text="Close",
-                command=log_window.destroy,
-                font=("Arial", 10),
-                bg="#6b7280",
-                fg="white",
-                relief="flat",
-                cursor="hand2",
-                padx=20,
-                pady=8
-            )
-            close_log_btn.pack(pady=(0, 20))
-        
-        view_log_btn = tk.Button(
-            button_frame,
-            text="View Full Log",
-            command=show_full_log,
-            font=("Arial", 10),
-            bg="#3b82f6",
-            fg="white",
-            relief="flat",
-            cursor="hand2",
-            padx=20,
-            pady=8
-        )
-        view_log_btn.pack(side="left", padx=(0, 10))
-        
-        close_btn = tk.Button(
-            button_frame,
-            text="Close",
-            command=error_window.destroy,
-            font=("Arial", 10),
-            bg="#6b7280",
-            fg="white",
-            relief="flat",
-            cursor="hand2",
-            padx=20,
-            pady=8
-        )
-        close_btn.pack(side="left")
-    
-    def _hide_status_and_load(self):
-        """Hide status bar and load the updated data."""
-        self._hide_status_bar()
+        # Re-enable buttons and load data
+        self.refresh_btn.config(state="normal", text="⭮ Refresh Data")
         self.load_data()
     
-    def _hide_status_bar(self):
-        """Hide the status bar."""
-        self.status_frame.pack_forget()
-        self.status_label.config(bg="#3b82f6")  # Reset to default color
+    def on_updater_error(self, error):
+        """Handle error running updater script.
+        
+        Args:
+            error: Error message string
+        """
+        messagebox.showerror(
+            "Error",
+            f"Failed to run code review updater:\n\n{error}"
+        )
+        self.refresh_btn.config(state="normal", text="⭮ Refresh Data")
+        # Reload data to properly update button states
+        self.load_data()
     
     def load_data(self):
         """Load code review data from the Excel file.
@@ -544,8 +350,9 @@ class DashboardApp:
                 "File Not Found",
                 f"Could not find: {DEST_FILE}\n\n"
                 "Please run first:\n"
-                "python code_review_updater.py --skip-download"
+                "python code_review_local.py"
             )
+            self.refresh_btn.config(state="normal", text="⭮ Refresh Data")
             return
         
         try:
@@ -561,26 +368,33 @@ class DashboardApp:
             
             self.repo_data = {}
             self.cancelled_data = {}
+            self.other_data = {}
             self.total_outstanding = 0
             self.total_cancelled = 0
+            self.total_other = 0
             
             # Skip header rows (first 3 rows typically contain headers)
             for row in rows[3:]:  # Start at row index 3
                 if not row or all(cell is None for cell in row):
                     continue
                 
-                review_num = row[1] if len(row) > 1 else None  # Column B
-                date = row[2] if len(row) > 2 else None  # Column C
-                repo = row[3] if len(row) > 3 else None  # Column D
-                description = row[4] if len(row) > 4 else None  # Column E
-                report_uploaded = row[5] if len(row) > 5 else None  # Column F
-                notes = row[8] if len(row) > 8 else None  # Column I
+                review_num = row[1] if len(row) > 1 else None  # Column B - Review Number
+                date = row[2] if len(row) > 2 else None  # Column C - Date
+                repo = row[3] if len(row) > 3 else None  # Column D - Repository
+                description = row[4] if len(row) > 4 else None  # Column E - Description
+                report_uploaded = row[5] if len(row) > 5 else None  # Column F - Report Uploaded status
+                notes = row[8] if len(row) > 8 else None  # Column I - Notes
                 
-                # Check if report_uploaded is truly empty (None, empty string, or whitespace)
-                is_uploaded = report_uploaded and str(report_uploaded).strip()
+                # Check if report_uploaded is truly empty (None, empty string, whitespace, or 'None')
+                is_uploaded = report_uploaded and str(report_uploaded).strip() and str(report_uploaded).strip().lower() != 'none'
                 
-                # Check if notes has content (indicator of cancelled/broken review)
-                has_notes = notes and str(notes).strip()
+                # Check if column contains 'no'
+                if report_uploaded and 'no' in str(report_uploaded).strip().lower():
+                    is_uploaded = False
+                
+                # Check if notes has content
+                notes_str = str(notes).strip() if notes else ""
+                has_notes = bool(notes_str)
                 
                 if repo and not is_uploaded:
                     if self.user_filter and not any(filter_term.lower() in repo.lower() for filter_term in self.user_filter):
@@ -589,16 +403,27 @@ class DashboardApp:
                     review_info = {
                         'reviewNum': str(review_num) if review_num is not None else 'N/A',
                         'date': format_date_only(date),
-                        'description': str(description) if description is not None else 'N/A'
+                        'description': str(description) if description is not None else 'N/A',
+                        'notes': notes_str if has_notes else None
                     }
                     
-                    # Cancelled/Broken: Report Uploaded is blank AND Notes is not empty
+                    # Categorize based on notes content (match super dashboard logic)
                     if has_notes:
-                        if repo not in self.cancelled_data:
-                            self.cancelled_data[repo] = []
-                        self.cancelled_data[repo].append(review_info)
-                        self.total_cancelled += 1
+                        notes_lower = notes_str.lower()
+                        # Cancelled/Broken: Notes contains "cancelled" or "pipeline"
+                        if "cancelled" in notes_lower or "pipeline" in notes_lower:
+                            if repo not in self.cancelled_data:
+                                self.cancelled_data[repo] = []
+                            self.cancelled_data[repo].append(review_info)
+                            self.total_cancelled += 1
+                        else:
+                            # Other: Notes has content but not cancelled/pipeline
+                            if repo not in self.other_data:
+                                self.other_data[repo] = []
+                            self.other_data[repo].append(review_info)
+                            self.total_other += 1
                     else:
+                        # Outstanding: No notes
                         if repo not in self.repo_data:
                             self.repo_data[repo] = []
                         self.repo_data[repo].append(review_info)
@@ -668,6 +493,22 @@ class DashboardApp:
             if widget != self.empty_label:
                 widget.destroy()
         
+        # Update cancelled button state and display count in label (BEFORE early return!)
+        if self.total_cancelled > 0:
+            self.cancelled_btn.config(state="normal")
+            self.cancelled_btn.config(text=f"🚫 Cancelled/Broken ({self.total_cancelled})")
+        else:
+            self.cancelled_btn.config(state="disabled")
+            self.cancelled_btn.config(text="🚫 Cancelled/Broken")
+        
+        # Update other button state and display count in label (BEFORE early return!)
+        if self.total_other > 0:
+            self.other_btn.config(state="normal")
+            self.other_btn.config(text=f"📋 Other ({self.total_other})")
+        else:
+            self.other_btn.config(state="disabled")
+            self.other_btn.config(text="📋 Other")
+        
         if self.total_outstanding == 0:
             self.empty_label.config(
                 text="✓ No Outstanding Reports!\nAll reports have been uploaded."
@@ -683,14 +524,6 @@ class DashboardApp:
         # Create repo cards
         for repo, reviews in sorted_repos:
             self.create_repo_card(repo, reviews)
-        
-        # Update cancelled button state and display count in label
-        if self.total_cancelled > 0:
-            self.cancelled_btn.config(state="normal")
-            self.cancelled_btn.config(text=f"🚫 Cancelled/Broken ({self.total_cancelled})")
-        else:
-            self.cancelled_btn.config(state="disabled")
-            self.cancelled_btn.config(text="🚫 Cancelled/Broken")
     
     def _create_card(self, parent_frame, repo, reviews, card_config):
         """Create an expandable card for repository reviews (shared helper).
@@ -842,7 +675,7 @@ class DashboardApp:
         }
         self._create_card(self.scrollable_frame, repo, reviews, card_config)
     
-    def _build_review_details(self, details_frame, reviews, bg_color, fg_color_header, fg_color_desc):
+    def _build_review_details(self, details_frame, reviews, bg_color, fg_color_header, fg_color_desc, show_notes=False):
         """Build the details view for reviews (shared helper).
         
         Args:
@@ -883,6 +716,19 @@ class DashboardApp:
                 justify="left"
             )
             desc_label.pack(anchor="w", pady=(3, 0))  # Top padding only
+
+            # Optionally show notes if requested and present
+            if show_notes and review.get('notes'):
+                notes_label = tk.Label(
+                    review_inner,
+                    text=f"Notes: {review['notes']}",
+                    font=("Arial", 9, "italic"),  # Notes font
+                    bg=bg_color,
+                    fg=fg_color_desc,
+                    wraplength=500,
+                    justify="left"
+                )
+                notes_label.pack(anchor="w", pady=(3, 0))
     
     def _build_details_for_repo(self, details_frame, reviews):
         """Build the details view for a repo (lazy loaded).
@@ -924,7 +770,7 @@ class DashboardApp:
             text="🚫 Cancelled/Broken Reviews",
             font=("Arial", 16, "bold"), # Title font
             bg="#f9fafb",
-            fg="#6b7280"
+            fg="#1f2937"
         )
         title_label.pack(anchor="center")
         
@@ -933,7 +779,7 @@ class DashboardApp:
             text=f"{self.total_cancelled} {'review' if self.total_cancelled == 1 else 'reviews'}",
             font=("Arial", 28, "bold"), # Count font
             bg="#f9fafb",
-            fg="#9ca3af"
+            fg="#1f2937"
         )
         count_label.pack(anchor="center", pady=(5, 0))  # Top padding only
         
@@ -942,7 +788,7 @@ class DashboardApp:
             text="Not counted in outstanding total",
             font=("Arial", 10), # Note font
             bg="#f9fafb",
-            fg="#9ca3af"
+            fg="#4b5563"
         )
         note_label.pack(anchor="center", pady=(5, 0))  # Top padding only
         
@@ -1011,7 +857,7 @@ class DashboardApp:
         """
         card_config = {
             'bg_color': '#f9fafb',
-            'fg_color': '#6b7280',
+            'fg_color': '#1f2937',
             'icon': '🚫',
             'count_text_template': '{count} cancelled/broken review{s}',
             'badge_color_fn': None,  # Use grey badge
@@ -1029,7 +875,145 @@ class DashboardApp:
             details_frame: The frame to populate with review details
             reviews: List of cancelled review dictionaries to display
         """
-        self._build_review_details(details_frame, reviews, "#f9fafb", "#6b7280", "#9ca3af")
+        self._build_review_details(details_frame, reviews, "#f9fafb", "#1f2937", "#4b5563", show_notes=True)
+    
+    def show_other_window(self):
+        """Open a separate window to show other reviews.
+        
+        Creates a modal-style window with:
+        - Header showing total other count
+        - Scrollable list of other review cards
+        - Close button
+        
+        These reviews have Report Uploaded blank AND Notes with content (but not cancelled/broken).
+        """
+        if self.total_other == 0:
+            return
+        
+        # Create new window
+        other_window = tk.Toplevel(self.root)
+        other_window.title("Other Reviews")
+        other_window.geometry("400x600")  # Match main window size
+        other_window.configure(bg="#f0f0f0")
+        
+        # Header section
+        header_frame = tk.Frame(other_window, bg="#f9fafb", relief="solid", bd=1)
+        header_frame.pack(fill="x", padx=20, pady=20)  # Header outer padding
+        
+        header_inner = tk.Frame(header_frame, bg="#f9fafb")
+        header_inner.pack(fill="x", padx=20, pady=15)  # Header inner padding
+        
+        title_label = tk.Label(
+            header_inner,
+            text="📋 Other Reviews",
+            font=("Arial", 16, "bold"),
+            bg="#f9fafb",
+            fg="#1f2937"
+        )
+        title_label.pack(anchor="center")
+        
+        count_label = tk.Label(
+            header_inner,
+            text=f"{self.total_other} {'review' if self.total_other == 1 else 'reviews'}",
+            font=("Arial", 28, "bold"),
+            bg="#f9fafb",
+            fg="#1f2937"
+        )   
+        count_label.pack(anchor="center", pady=(5, 0))  # Top padding only
+        
+        note_label = tk.Label(
+            header_inner,
+            text="Not counted in outstanding total",
+            font=("Arial", 10),
+            bg="#f9fafb",
+            fg="#4b5563"
+        )
+        note_label.pack(anchor="center", pady=(5, 0))  # Top padding only
+        
+        # Scrollable content area
+        canvas_frame = tk.Frame(other_window, bg="#f0f0f0")
+        canvas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        
+        canvas = tk.Canvas(canvas_frame, bg="#f0f0f0", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        
+        scrollable_frame = tk.Frame(canvas, bg="#f0f0f0")
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_window, width=e.width))
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")  # Always show scrollbar in popup
+        
+        # Bind mousewheel
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 100)), "units")
+        
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        
+        # Sort other repos by count
+        sorted_other = sorted(self.other_data.items(), key=lambda x: len(x[1]), reverse=True)
+        
+        # Create cards for other repos
+        for repo, reviews in sorted_other:
+            self.create_other_card_in_window(scrollable_frame, repo, reviews)
+        
+        # Close button at bottom
+        close_btn = tk.Button(
+            other_window,
+            text="Close",
+            command=other_window.destroy,
+            font=("Arial", 11),
+            bg="#6b7280",
+            fg="white",
+            relief="flat",
+            cursor="hand2",
+            padx=30,
+            pady=8
+        )
+        close_btn.pack(pady=(0, 20))  # Bottom padding
+        
+        # Cleanup mousewheel binding when window closes to avoid conflicts
+        def on_close():
+            canvas.unbind_all("<MouseWheel>")
+            other_window.destroy()
+        
+        other_window.protocol("WM_DELETE_WINDOW", on_close)
+    
+    def create_other_card_in_window(self, parent_frame, repo, reviews):
+        """Create a card for other reviews in the popup window.
+        
+        Args:
+            parent_frame: The parent frame to add the card to
+            repo: Repository name
+            reviews: List of other review dictionaries
+        """
+        card_config = {
+            'bg_color': '#f9fafb',      # Same as cancelled popup cards
+            'fg_color': '#1f2937',
+            'icon': '📋',
+            'count_text_template': '{count} other review{s}',
+            'badge_color_fn': None,
+            'expanded_set': self.expanded_other,
+            'expansion_key': f"other_{repo}",
+            'build_details_fn': self._build_other_details,
+            'details_bg': '#f3f4f6'     # Same details background as cancelled
+        }
+        self._create_card(parent_frame, repo, reviews, card_config)
+    
+    def _build_other_details(self, details_frame, reviews):
+        """Build the details view for other reviews (lazy loaded).
+        
+        Args:
+            details_frame: The frame to populate with review details
+            reviews: List of other review dictionaries to display
+        """
+        self._build_review_details(details_frame, reviews, "#f9fafb", "#1f2937", "#4b5563", show_notes=True)
 
 def main():
     root = tk.Tk()

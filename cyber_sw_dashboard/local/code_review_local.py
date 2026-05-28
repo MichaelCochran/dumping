@@ -44,20 +44,51 @@ LOG_FILE = str(Path(__file__).parent / "code_review_updater.log")
 # ============================================================================
 
 class ColoredFormatter(logging.Formatter):
-    """Custom formatter that adds color to log level names for terminal output."""
-    
     COLORS = {
         'INFO': '\033[92m',
         'ERROR': '\033[91m',
         'WARNING': '\033[93m',
-        'RESET': '\033[0m'
+        'DEBUG': '\033[94m',
+        'SECTION': '\033[96m',
+        'SUCCESS': '\033[92m',
+        'PROMPT': '\033[95m',
+        'SEPARATOR': '\033[90m',
+        'RESET': '\033[0m',
     }
-    
+
     def format(self, record):
-        levelname = record.levelname
-        if levelname in self.COLORS:
-            record.levelname = f"{self.COLORS[levelname]}{levelname}{self.COLORS['RESET']}"
-        return super().format(record)
+        original_levelname = record.levelname
+        if original_levelname in self.COLORS:
+            record.levelname = f"{self.COLORS[original_levelname]}{original_levelname}{self.COLORS['RESET']}"
+
+        formatted = super().format(record)
+
+        message = record.getMessage()
+        msg_stripped = str(message).strip()
+        color = None
+
+        if msg_stripped.startswith("STEP "):
+            color = self.COLORS['SECTION']
+        elif msg_stripped and set(msg_stripped) == {"="}:
+            color = self.COLORS['SECTION']
+        elif msg_stripped.startswith("✓") or "WORKFLOW COMPLETED" in message:
+            color = self.COLORS['SUCCESS']
+        elif msg_stripped.startswith("✗"):
+            color = self.COLORS['ERROR']
+        elif "NO NEW DATA" in message:
+            color = self.COLORS['WARNING']
+        elif "ACTION REQUIRED" in message or "Press ENTER" in message:
+            color = self.COLORS['PROMPT']
+
+        if color is None:
+            if original_levelname == 'ERROR':
+                color = self.COLORS['ERROR']
+            elif original_levelname == 'WARNING':
+                color = self.COLORS['WARNING']
+
+        if color:
+            return f"{color}{formatted}{self.COLORS['RESET']}"
+        return formatted
 
 def setup_logging():
     """Configure logging to output to both file and console."""
@@ -152,12 +183,14 @@ def authenticate(playwright, session_path: Path, site_url: str) -> bool:
         bool: True if authentication successful, False otherwise
     """
     logging.info("Opening browser for login…")
-    print("\n" + "=" * 70)
-    print(" ACTION REQUIRED: Browser opening for SharePoint login.")
-    print(" 1. Log in and complete MFA")
-    print(" 2. Navigate to your SharePoint site if not redirected")
-    print(" 3. Press ENTER here after successful login")
-    print("=" * 70 + "\n")
+    colors = ColoredFormatter.COLORS
+    sep_line = "=" * 70
+    print(f"\n{colors['SECTION']}{sep_line}{colors['RESET']}")
+    print(f"{colors['PROMPT']} ACTION REQUIRED: Browser opening for SharePoint login.{colors['RESET']}")
+    print(f"{colors['PROMPT']} 1. Log in and complete MFA{colors['RESET']}")
+    print(f"{colors['PROMPT']} 2. Navigate to your SharePoint site if not redirected{colors['RESET']}")
+    print(f"{colors['PROMPT']} 3. Press ENTER here after successful login{colors['RESET']}")
+    print(f"{colors['SECTION']}{sep_line}{colors['RESET']}\n")
 
     browser = None
     try:
@@ -805,8 +838,8 @@ def main():
         wb.close()
         
         # Check for duplicates by comparing review numbers
-        # Use local dest_file if it exists, otherwise use comparison tracker
-        compare_file = dest_file if dest_file.exists() else comparison_file
+        # Always use fresh comparison tracker from SharePoint for accurate comparison
+        compare_file = comparison_file
         logging.info(f"Comparing against: {compare_file.name}")
         
         comparison_wb = openpyxl.load_workbook(compare_file, read_only=True, data_only=True)

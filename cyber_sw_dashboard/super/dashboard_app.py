@@ -10,14 +10,17 @@ from pathlib import Path
 import openpyxl
 from datetime import datetime
 import json
-import subprocess
-import threading
-import sys
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+# CUSTOMIZATION: Update file paths if your data files are in different locations
 
 SCRIPT_DIR = Path(__file__).parent
-DEST_FILE = SCRIPT_DIR / "destination_current.xlsx"
-FILTER_CONFIG = SCRIPT_DIR / "../user_filters.json"
-UPDATER_SCRIPT = SCRIPT_DIR / "code_review_updater.py"
+# CUSTOMIZATION: Path to the Excel file containing review data
+DEST_FILE = SCRIPT_DIR / "destination_current.xlsx"  # Main data source file
+# CUSTOMIZATION: Path to the JSON file containing repository filter settings
+FILTER_CONFIG = SCRIPT_DIR / "../user_filters.json"  # User filter configuration
 
 def format_date_only(value):
     """Extract date without time from various formats"""
@@ -51,19 +54,25 @@ class DashboardApp:
             root: The tkinter root window
         """
         self.root = root
+        # CUSTOMIZATION: Change window title as desired
         self.root.title("Code Review Dashboard - Super")
+        # CUSTOMIZATION: Adjust window size (width x height)
         self.root.geometry("400x600")  # Main window dimensions
+        # CUSTOMIZATION: Change background color (hex format)
         self.root.configure(bg="#f0f0f0")  # Light grey background
         
         # Data structures for storing review information
         self.repo_data = {}  # Outstanding reviews grouped by repository
         self.cancelled_data = {}  # Cancelled/broken reviews grouped by repository
+        self.other_data = {}  # Other reviews (notes present but not cancelled/broken)
         self.total_outstanding = 0  # Count of actionable outstanding reviews
         self.total_cancelled = 0  # Count of cancelled/broken reviews
+        self.total_other = 0  # Count of other reviews
         
         # Track which repo cards are expanded in the UI
         self.expanded_repos = set()  # Expanded outstanding repo cards
         self.expanded_cancelled = set()  # Expanded cancelled repo cards in popup
+        self.expanded_other = set()  # Expanded other repo cards in popup
         
         # Load repository filter from config file
         self.user_filter = self.load_user_filter()
@@ -131,40 +140,56 @@ class DashboardApp:
         toolbar_frame = tk.Frame(self.root, bg="#f0f0f0")
         toolbar_frame.pack(fill="x", padx=20, pady=(0, 10))
         
-        # Button container for side-by-side layout of equal-sized buttons
-        button_container = tk.Frame(toolbar_frame, bg="#f0f0f0")
-        button_container.pack(expand=True)
+        # First row - Refresh button (full width)
+        refresh_container = tk.Frame(toolbar_frame, bg="#f0f0f0")
+        refresh_container.pack(fill="x", pady=(0, 5))
         
         self.refresh_btn = tk.Button(
-            button_container,
-            text="⟳ Refresh Data",
+            refresh_container,
+            text="⭮ Refresh Data",
             command=self.refresh_data,
             font=("Arial", 11), # Refresh button font
             bg="#3b82f6",
             fg="white",
             relief="flat",
             cursor="hand2",
-            padx=20,
-            pady=8,
-            width=15  # Button width for consistent sizing
+            pady=8
         )
-        self.refresh_btn.pack(side="left", padx=(0, 5))  # Right padding between buttons
+        self.refresh_btn.pack(fill="x")
+        
+        # Second row - Cancelled/Broken and Other buttons (split width)
+        button_row = tk.Frame(toolbar_frame, bg="#f0f0f0")
+        button_row.pack(fill="x")
         
         self.cancelled_btn = tk.Button(
-            button_container,
+            button_row,
             text="🚫 Cancelled/Broken",
             command=self.show_cancelled_window,
             font=("Arial", 11), # Cancelled button font
             bg="#6b7280",
             fg="white",
+            disabledforeground="#9ca3af",  # Light gray text when disabled
             relief="flat",
             cursor="hand2",
-            padx=20,
             pady=8,
-            width=15,  # Match refresh button width
             state="disabled"  # Initially disabled until data loads
         )
-        self.cancelled_btn.pack(side="left", padx=(5, 0))
+        self.cancelled_btn.pack(side="left", fill="x", expand=True, padx=(0, 2.5))
+        
+        self.other_btn = tk.Button(
+            button_row,
+            text="📋 Other",
+            command=self.show_other_window,
+            font=("Arial", 11),
+            bg="#6b7280",
+            fg="white",
+            disabledforeground="#9ca3af",  # Light gray text when disabled
+            relief="flat",
+            cursor="hand2",
+            pady=8,
+            state="disabled"  # Initially disabled until data loads
+        )
+        self.other_btn.pack(side="left", fill="x", expand=True, padx=(2.5, 0))
         
         # Canvas with Scrollbar for Repository List - main scrollable content area
         canvas_frame = tk.Frame(self.root, bg="#f0f0f0")
@@ -239,70 +264,24 @@ class DashboardApp:
             return []
     
     def refresh_data(self):
-        """Run code review updater then load data.
+        """Reload data from local Excel file.
         
-        Executes code_review_updater.py in background thread,
-        then loads the updated Excel data.
+        Reloads the data from destination_current.xlsx without
+        running the updater script.
         """
         # Disable buttons during refresh
-        self.refresh_btn.config(state="disabled", text="⟳ Updating...")
+        self.refresh_btn.config(state="disabled", text="⭮ Reloading...")
         self.cancelled_btn.config(state="disabled")
+        self.other_btn.config(state="disabled")
         
         # Update UI to show progress
-        self.empty_label.config(text="Running code review updater...\nThis may take a moment.")
+        self.empty_label.config(text="Reloading data...")
         self.empty_label.pack(pady=50)
         
-        def run_updater():
-            """Run the updater script in a subprocess."""
-            try:
-                # Run the code_review_updater.py script
-                result = subprocess.run(
-                    [sys.executable, str(UPDATER_SCRIPT)],
-                    capture_output=True,
-                    text=True,
-                    cwd=str(SCRIPT_DIR)
-                )
-                
-                # Schedule UI update on main thread
-                self.root.after(0, lambda: self.on_updater_complete(result))
-                
-            except Exception as e:
-                # Schedule error handling on main thread
-                self.root.after(0, lambda: self.on_updater_error(str(e)))
-        
-        # Run updater in background thread
-        thread = threading.Thread(target=run_updater, daemon=True)
-        thread.start()
-    
-    def on_updater_complete(self, result):
-        """Handle completion of updater script.
-        
-        Args:
-            result: subprocess.CompletedProcess result
-        """
-        if result.returncode != 0:
-            error_msg = result.stderr if result.stderr else "Unknown error occurred"
-            messagebox.showerror(
-                "Updater Failed",
-                f"Code review updater failed:\n\n{error_msg[:500]}"
-            )
-        
-        # Re-enable buttons and load data
-        self.refresh_btn.config(state="normal", text="⟳ Refresh Data")
+        # Reload data and re-enable buttons
         self.load_data()
+        self.refresh_btn.config(state="normal", text="⭮ Reload Data")
     
-    def on_updater_error(self, error):
-        """Handle error running updater script.
-        
-        Args:
-            error: Error message string
-        """
-        messagebox.showerror(
-            "Error",
-            f"Failed to run code review updater:\n\n{error}"
-        )
-        self.refresh_btn.config(state="normal", text="⟳ Refresh Data")
-        self.cancelled_btn.config(state="normal")
     
     def load_data(self):
         """Load code review data from the Excel file.
@@ -320,7 +299,7 @@ class DashboardApp:
                 "Please run first:\n"
                 "python code_review_updater.py"
             )
-            self.refresh_btn.config(state="normal", text="⟳ Refresh Data")
+            self.refresh_btn.config(state="normal", text="⭮ Reload Data")
             return
         
         try:
@@ -336,26 +315,36 @@ class DashboardApp:
             
             self.repo_data = {}
             self.cancelled_data = {}
+            self.other_data = {}
             self.total_outstanding = 0
             self.total_cancelled = 0
+            self.total_other = 0
             
+            # CUSTOMIZATION: Adjust this value if your Excel has different number of header rows
             # Skip header rows (first 3 rows typically contain headers)
-            for row in rows[3:]:  # Start at row index 3
+            for row in rows[3:]:  # Start at row index 3 (0-indexed)
                 if not row or all(cell is None for cell in row):
                     continue
                 
-                review_num = row[1] if len(row) > 1 else None  # Column B
-                date = row[2] if len(row) > 2 else None  # Column C
-                repo = row[3] if len(row) > 3 else None  # Column D
-                description = row[4] if len(row) > 4 else None  # Column E
-                report_uploaded = row[5] if len(row) > 5 else None  # Column F
-                notes = row[8] if len(row) > 8 else None  # Column I
+                # CUSTOMIZATION: Column indices - adjust if your Excel layout differs
+                # These indices are 0-based: [0]=A, [1]=B, [2]=C, etc.
+                review_num = row[1] if len(row) > 1 else None  # Column B - Review Number
+                date = row[2] if len(row) > 2 else None  # Column C - Date
+                repo = row[3] if len(row) > 3 else None  # Column D - Repository
+                description = row[4] if len(row) > 4 else None  # Column E - Description
+                report_uploaded = row[5] if len(row) > 5 else None  # Column F - Report Uploaded status
+                notes = row[8] if len(row) > 8 else None  # Column I - Notes
                 
-                # Check if report_uploaded is truly empty (None, empty string, or whitespace)
-                is_uploaded = report_uploaded and str(report_uploaded).strip()
+                # Check if report_uploaded is truly empty (None, empty string, whitespace, or 'None')
+                is_uploaded = report_uploaded and str(report_uploaded).strip() and str(report_uploaded).strip().lower() != 'none'
                 
-                # Check if notes has content (indicator of cancelled/broken review)
-                has_notes = notes and str(notes).strip()
+                # Check if column contains 'no'
+                if report_uploaded and 'no' in str(report_uploaded).strip().lower():
+                    is_uploaded = False
+                
+                # Check if notes has content
+                notes_str = str(notes).strip() if notes else ""
+                has_notes = bool(notes_str)
                 
                 if repo and not is_uploaded:
                     if self.user_filter and not any(filter_term.lower() in repo.lower() for filter_term in self.user_filter):
@@ -364,16 +353,29 @@ class DashboardApp:
                     review_info = {
                         'reviewNum': str(review_num) if review_num is not None else 'N/A',
                         'date': format_date_only(date),
-                        'description': str(description) if description is not None else 'N/A'
+                        'description': str(description) if description is not None else 'N/A',
+                        'notes': notes_str if has_notes else None
                     }
                     
-                    # Cancelled/Broken: Report Uploaded is blank AND Notes is not empty
+                    # CUSTOMIZATION: Modify categorization logic for your workflow
+                    # Categorize based on notes content
                     if has_notes:
-                        if repo not in self.cancelled_data:
-                            self.cancelled_data[repo] = []
-                        self.cancelled_data[repo].append(review_info)
-                        self.total_cancelled += 1
+                        notes_lower = notes_str.lower()
+                        # CUSTOMIZATION: Add or modify keywords to identify cancelled/broken reviews
+                        # Cancelled/Broken: Notes contains "cancelled" or "pipeline"
+                        if "cancelled" in notes_lower or "pipeline" in notes_lower:
+                            if repo not in self.cancelled_data:
+                                self.cancelled_data[repo] = []
+                            self.cancelled_data[repo].append(review_info)
+                            self.total_cancelled += 1
+                        else:
+                            # Other: Notes has content but not cancelled/pipeline
+                            if repo not in self.other_data:
+                                self.other_data[repo] = []
+                            self.other_data[repo].append(review_info)
+                            self.total_other += 1
                     else:
+                        # Outstanding: No notes
                         if repo not in self.repo_data:
                             self.repo_data[repo] = []
                         self.repo_data[repo].append(review_info)
@@ -394,24 +396,26 @@ class DashboardApp:
         - Repository cards for outstanding reviews
         - Cancelled/Broken button state and text
         """
+        # CUSTOMIZATION: Modify color thresholds and colors to match your preferences
         # Update summary with color-coding based on count thresholds
         count = self.total_outstanding
         
         # Color coding thresholds: red 10+, yellow 6-9, green 1-5, blue 0
-        if count >= 10:  # Red threshold
-            text_color = "#dc2626"  # Red
+        # CUSTOMIZATION: Adjust these threshold values to change when colors change
+        if count >= 10:  # Red threshold - CUSTOMIZATION: Change value for red alert level
+            text_color = "#dc2626"  # Red - CUSTOMIZATION: Change hex color
             bg_color = "#fef2f2"
             label_color = "#991b1b"
-        elif count >= 6:  # Yellow threshold
-            text_color = "#eab308"  # Yellow
+        elif count >= 6:  # Yellow threshold - CUSTOMIZATION: Change value for yellow warning level
+            text_color = "#eab308"  # Yellow - CUSTOMIZATION: Change hex color
             bg_color = "#fefce8"
             label_color = "#854d0e"
-        elif count >= 1:  # Green threshold
-            text_color = "#16a34a"  # Green
+        elif count >= 1:  # Green threshold - CUSTOMIZATION: Change value for green ok level
+            text_color = "#16a34a"  # Green - CUSTOMIZATION: Change hex color
             bg_color = "#f0fdf4"
             label_color = "#166534"
-        else:  # Blue threshold (0 items)
-            text_color = "#2563eb"  # Blue
+        else:  # Blue threshold (0 items) - CUSTOMIZATION: Change colors for zero items
+            text_color = "#2563eb"  # Blue - CUSTOMIZATION: Change hex color
             bg_color = "#dbeafe"
             label_color = "#1e40af"
         
@@ -443,6 +447,22 @@ class DashboardApp:
             if widget != self.empty_label:
                 widget.destroy()
         
+        # Update cancelled button state and display count in label (BEFORE early return!)
+        if self.total_cancelled > 0:
+            self.cancelled_btn.config(state="normal")
+            self.cancelled_btn.config(text=f"🚫 Cancelled/Broken ({self.total_cancelled})")
+        else:
+            self.cancelled_btn.config(state="disabled")
+            self.cancelled_btn.config(text="🚫 Cancelled/Broken")
+        
+        # Update other button state and display count in label (BEFORE early return!)
+        if self.total_other > 0:
+            self.other_btn.config(state="normal")
+            self.other_btn.config(text=f"📋 Other ({self.total_other})")
+        else:
+            self.other_btn.config(state="disabled")
+            self.other_btn.config(text="📋 Other")
+        
         if self.total_outstanding == 0:
             self.empty_label.config(
                 text="✓ No Outstanding Reports!\nAll reports have been uploaded."
@@ -458,14 +478,6 @@ class DashboardApp:
         # Create repo cards
         for repo, reviews in sorted_repos:
             self.create_repo_card(repo, reviews)
-        
-        # Update cancelled button state and display count in label
-        if self.total_cancelled > 0:
-            self.cancelled_btn.config(state="normal")
-            self.cancelled_btn.config(text=f"🚫 Cancelled/Broken ({self.total_cancelled})")
-        else:
-            self.cancelled_btn.config(state="disabled")
-            self.cancelled_btn.config(text="🚫 Cancelled/Broken")
     
     def _create_card(self, parent_frame, repo, reviews, card_config):
         """Create an expandable card for repository reviews (shared helper).
@@ -587,15 +599,17 @@ class DashboardApp:
             widget.bind("<Button-1>", toggle_details)
     
     def _get_badge_colors(self, count):
-        """Get badge colors based on count (for outstanding reviews)."""
-        if count >= 5:  # Red badge threshold
-            return "#dc2626", "#fef2f2"
-        elif count >= 3:  # Yellow badge threshold
-            return "#eab308", "#fefce8"
-        elif count >= 1:  # Green badge threshold
-            return "#16a34a", "#f0fdf4"
+        """Get badge colors based on count (for outstanding reviews).
+        CUSTOMIZATION: Adjust thresholds and colors for repo card badges."""
+        # CUSTOMIZATION: Change these thresholds and colors for individual repository badges
+        if count >= 5:  # Red badge threshold - CUSTOMIZATION: Adjust count threshold
+            return "#dc2626", "#fef2f2"  # CUSTOMIZATION: Change colors (text, background)
+        elif count >= 3:  # Yellow badge threshold - CUSTOMIZATION: Adjust count threshold
+            return "#eab308", "#fefce8"  # CUSTOMIZATION: Change colors (text, background)
+        elif count >= 1:  # Green badge threshold - CUSTOMIZATION: Adjust count threshold
+            return "#16a34a", "#f0fdf4"  # CUSTOMIZATION: Change colors (text, background)
         else:  # Blue badge threshold (0 items)
-            return "#2563eb", "#eff6ff"
+            return "#2563eb", "#eff6ff"  # CUSTOMIZATION: Change colors (text, background)
     
     def create_repo_card(self, repo, reviews):
         """Create an expandable card for a repository's outstanding reviews.
@@ -617,7 +631,7 @@ class DashboardApp:
         }
         self._create_card(self.scrollable_frame, repo, reviews, card_config)
     
-    def _build_review_details(self, details_frame, reviews, bg_color, fg_color_header, fg_color_desc):
+    def _build_review_details(self, details_frame, reviews, bg_color, fg_color_header, fg_color_desc, show_notes=False):
         """Build the details view for reviews (shared helper).
         
         Args:
@@ -626,6 +640,7 @@ class DashboardApp:
             bg_color: Background color for review frames
             fg_color_header: Foreground color for header text
             fg_color_desc: Foreground color for description text
+            show_notes: Whether to display notes field
         """
         # Clear any existing details
         for widget in details_frame.winfo_children():
@@ -658,6 +673,19 @@ class DashboardApp:
                 justify="left"
             )
             desc_label.pack(anchor="w", pady=(3, 0))  # Top padding only
+            
+            # Show notes if requested and available
+            if show_notes and review.get('notes'):
+                notes_label = tk.Label(
+                    review_inner,
+                    text=f"Notes: {review['notes']}",
+                    font=("Arial", 9, "italic"), # Notes font
+                    bg=bg_color,
+                    fg=fg_color_desc,
+                    wraplength=500,  # Max width before text wraps
+                    justify="left"
+                )
+                notes_label.pack(anchor="w", pady=(3, 0))  # Top padding only
     
     def _build_details_for_repo(self, details_frame, reviews):
         """Build the details view for a repo (lazy loaded).
@@ -666,7 +694,7 @@ class DashboardApp:
             details_frame: The frame to populate with review details
             reviews: List of review dictionaries to display
         """
-        self._build_review_details(details_frame, reviews, "white", "#374151", "#6b7280")
+        self._build_review_details(details_frame, reviews, "white", "#374151", "#6b7280", show_notes=False)
     
     def show_cancelled_window(self):
         """Open a separate window to show cancelled/broken reviews.
@@ -699,7 +727,7 @@ class DashboardApp:
             text="🚫 Cancelled/Broken Reviews",
             font=("Arial", 16, "bold"), # Title font
             bg="#f9fafb",
-            fg="#6b7280"
+            fg="#1f2937"
         )
         title_label.pack(anchor="center")
         
@@ -708,7 +736,7 @@ class DashboardApp:
             text=f"{self.total_cancelled} {'review' if self.total_cancelled == 1 else 'reviews'}",
             font=("Arial", 28, "bold"), # Count font
             bg="#f9fafb",
-            fg="#9ca3af"
+            fg="#1f2937"
         )
         count_label.pack(anchor="center", pady=(5, 0))  # Top padding only
         
@@ -717,7 +745,7 @@ class DashboardApp:
             text="Not counted in outstanding total",
             font=("Arial", 10), # Note font
             bg="#f9fafb",
-            fg="#9ca3af"
+            fg="#4b5563"
         )
         note_label.pack(anchor="center", pady=(5, 0))  # Top padding only
         
@@ -786,7 +814,7 @@ class DashboardApp:
         """
         card_config = {
             'bg_color': '#f9fafb',
-            'fg_color': '#6b7280',
+            'fg_color': '#1f2937',
             'icon': '🚫',
             'count_text_template': '{count} cancelled/broken review{s}',
             'badge_color_fn': None,  # Use grey badge
@@ -804,7 +832,145 @@ class DashboardApp:
             details_frame: The frame to populate with review details
             reviews: List of cancelled review dictionaries to display
         """
-        self._build_review_details(details_frame, reviews, "#f9fafb", "#6b7280", "#9ca3af")
+        self._build_review_details(details_frame, reviews, "#f9fafb", "#1f2937", "#4b5563", show_notes=True)
+    
+    def show_other_window(self):
+        """Open a separate window to show other reviews.
+        
+        Creates a modal-style window with:
+        - Header showing total other count
+        - Scrollable list of other review cards
+        - Close button
+        
+        These reviews have Report Uploaded blank AND Notes with content (but not cancelled/broken).
+        """
+        if self.total_other == 0:
+            return
+        
+        # Create new window
+        other_window = tk.Toplevel(self.root)
+        other_window.title("Other Reviews")
+        other_window.geometry("400x600")  # Match main window size
+        other_window.configure(bg="#f0f0f0")
+        
+        # Header section
+        header_frame = tk.Frame(other_window, bg="#f9fafb", relief="solid", bd=1)
+        header_frame.pack(fill="x", padx=20, pady=20)  # Header outer padding
+        
+        header_inner = tk.Frame(header_frame, bg="#f9fafb")
+        header_inner.pack(fill="x", padx=20, pady=15)  # Header inner padding
+        
+        title_label = tk.Label(
+            header_inner,
+            text="📋 Other Reviews",
+            font=("Arial", 16, "bold"),
+            bg="#f9fafb",
+            fg="#1f2937"
+        )
+        title_label.pack(anchor="center")
+        
+        count_label = tk.Label(
+            header_inner,
+            text=f"{self.total_other} {'review' if self.total_other == 1 else 'reviews'}",
+            font=("Arial", 28, "bold"),
+            bg="#f9fafb",
+            fg="#1f2937"
+        )
+        count_label.pack(anchor="center", pady=(5, 0))  # Top padding only
+        
+        note_label = tk.Label(
+            header_inner,
+            text="Not counted in outstanding total",
+            font=("Arial", 10),
+            bg="#f9fafb",
+            fg="#4b5563"
+        )
+        note_label.pack(anchor="center", pady=(5, 0))  # Top padding only
+        
+        # Scrollable content area
+        canvas_frame = tk.Frame(other_window, bg="#f0f0f0")
+        canvas_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        
+        canvas = tk.Canvas(canvas_frame, bg="#f0f0f0", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+        
+        scrollable_frame = tk.Frame(canvas, bg="#f0f0f0")
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_window, width=e.width))
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")  # Always show scrollbar in popup
+        
+        # Bind mousewheel
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 100)), "units")
+        
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+        
+        # Sort other repos by count
+        sorted_other = sorted(self.other_data.items(), key=lambda x: len(x[1]), reverse=True)
+        
+        # Create cards for other repos
+        for repo, reviews in sorted_other:
+            self.create_other_card_in_window(scrollable_frame, repo, reviews)
+        
+        # Close button at bottom
+        close_btn = tk.Button(
+            other_window,
+            text="Close",
+            command=other_window.destroy,
+            font=("Arial", 11),
+            bg="#6b7280",
+            fg="white",
+            relief="flat",
+            cursor="hand2",
+            padx=30,
+            pady=8
+        )
+        close_btn.pack(pady=(0, 20))  # Bottom padding
+        
+        # Cleanup mousewheel binding when window closes to avoid conflicts
+        def on_close():
+            canvas.unbind_all("<MouseWheel>")
+            other_window.destroy()
+        
+        other_window.protocol("WM_DELETE_WINDOW", on_close)
+    
+    def create_other_card_in_window(self, parent_frame, repo, reviews):
+        """Create a card for other reviews in the popup window.
+        
+        Args:
+            parent_frame: The parent frame to add the card to
+            repo: Repository name
+            reviews: List of other review dictionaries
+        """
+        card_config = {
+            'bg_color': '#f9fafb',
+            'fg_color': '#1f2937',
+            'icon': '📋',
+            'count_text_template': '{count} other review{s}',
+            'badge_color_fn': None,  # Use grey badge
+            'expanded_set': self.expanded_other,
+            'expansion_key': f"other_{repo}",
+            'build_details_fn': self._build_other_details,
+            'details_bg': '#f3f4f6'
+        }
+        self._create_card(parent_frame, repo, reviews, card_config)
+    
+    def _build_other_details(self, details_frame, reviews):
+        """Build the details view for other reviews (lazy loaded).
+        
+        Args:
+            details_frame: The frame to populate with review details
+            reviews: List of other review dictionaries to display
+        """
+        self._build_review_details(details_frame, reviews, "#f9fafb", "#1f2937", "#4b5563", show_notes=True)
 
 def main():
     root = tk.Tk()

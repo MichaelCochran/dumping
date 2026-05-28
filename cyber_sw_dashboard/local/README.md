@@ -67,7 +67,7 @@ python code_review_local.py --skip-download
 ### Output Files
 - `destination_current.xlsx` - Your local copy with latest reviews
 - `code_review_updater.log` - Detailed operation logs
-- `sp_session.json` - Saved login session (auto-created)
+- `sp_session.json` - Saved source SharePoint login session (auto-created)
 - `sp_dest_session.json` - Saved comparison tracker session (auto-created)
 
 ---
@@ -80,23 +80,23 @@ Displays outstanding reviews with integrated refresh functionality.
 - Displays outstanding reviews from your `destination_current.xlsx` file
 - Groups reviews by repository with expandable cards
 - Color-coded status indicators based on workload
-- **Integrated refresh button** - automatically runs `code_review_local.py` to fetch latest data
-- Real-time filtering by repository names
+- **Integrated refresh button** - automatically runs `code_review_local.py` to download and process latest data
+- Real-time filtering by repository names using `user_filters.json`
 
 ### Features
-- 🔄 **One-Click Refresh**: Automatically downloads and processes latest SharePoint data
-  - Runs `code_review_local.py` in background without blocking UI
-  - Shows status updates during refresh process
-  - Displays detailed error dialogs if download fails
-- 🎨 **Color-Coded Status**: Visual workload indicators
-  - 🔴 Red: 10+ outstanding reports
-  - 🟡 Yellow: 6-9 reports
-  - 🟢 Green: 1-5 reports
-  - 🔵 Blue: 0 reports
-- 🔍 **Repository Filtering**: Filter by repository name (partial match, case-insensitive)
-- 📊 **Expandable Cards**: Click any repository to see detailed review information
-- 🚫 **Cancelled/Broken Reviews**: Separate view for cancelled or broken reviews
-- ⚡ **Lazy Loading**: Efficient rendering for large datasets
+- One-click refresh: Automatically runs `code_review_local.py` in the background (non-blocking UI)
+  - Shows status updates during refresh
+  - Displays detailed error dialogs if the updater fails
+- Color-coded status: Visual workload indicators
+  - Red: 10+ outstanding reports
+  - Yellow: 6-9 reports
+  - Green: 1-5 reports
+  - Blue: 0 reports
+- Repository filtering: Filter by repository name (partial match, case-insensitive) via `user_filters.json`
+- Expandable cards: Click any repository to see detailed review information
+- Cancelled/Broken reviews: Separate view for reviews where Notes contain "cancelled" or "pipeline"
+- Other reviews: Separate view for reviews with Notes that are not cancelled/pipeline
+- Lazy loading and scrollable layout for large datasets
 
 ### Usage
 ```bash
