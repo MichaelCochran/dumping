@@ -1,0 +1,268 @@
+"""
+SharePoint scanner using Playwright
+Uses Mike SSO module for authentication
+"""
+import sys
+from pathlib import Path
+from datetime import datetime
+from playwright.sync_api import sync_playwright
+import requests
+
+# Import Mike SSO functions
+sys.path.insert(0, str(Path(__file__).parent))
+try:
+    from importlib.machinery import SourceFileLoader
+    mike_sso = SourceFileLoader("mike_sso", str(Path(__file__).parent / "Mike SSO")).load_module()
+    is_login_page = mike_sso.is_login_page
+    check_session_valid = mike_sso.check_session_valid
+    authenticate = mike_sso.authenticate
+except Exception as e:
+    print(f"Error loading Mike SSO: {e}")
+    print("Make sure 'Mike SSO' file exists in the same directory")
+    sys.exit(1)
+
+# SharePoint configuration
+SHAREPOINT_SITE = "https://"
+SESSION_FILE = Path.home() / ".sharepoint_playwright_session.json"
+
+print("SharePoint Playwright Scanner")
+print("=" * 80)
+
+with sync_playwright() as p:
+    # Check if we have a valid saved session
+    if SESSION_FILE.exists():
+        print("Checking saved session...")
+        if check_session_valid(p, SESSION_FILE, SHAREPOINT_SITE):
+            print("[OK] Saved session is valid")
+        else:
+            print("[X] Session expired, need to re-authenticate")
+            SESSION_FILE.unlink()
+    
+    # Authenticate if needed
+    if not SESSION_FILE.exists():
+        print("\nAuthenticating to SharePoint...")
+        print("Browser will open for login (with MFA support)")
+        if not authenticate(p, SESSION_FILE, SHAREPOINT_SITE):
+            print("[ERROR] Authentication failed")
+            sys.exit(1)
+        print("[OK] Authentication successful")
+    
+    # Now use the authenticated session
+    print("\nOpening authenticated browser...")
+    browser = p.chromium.launch(headless=True)
+    context = browser.new_context(storage_state=str(SESSION_FILE))
+    page = context.new_page()
+    
+    # Navigate to SharePoint
+    page.goto(SHAREPOINT_SITE, wait_until="domcontentloaded")
+    print(f"Navigated to: {page.url}")
+    
+    # Discover available document libraries
+    print("\nDiscovering document libraries...")
+    api_url = f"{SHAREPOINT_SITE}/_api/web/lists?$filter=BaseTemplate eq 101&$select=Title,ItemCount,Description"
+    
+    try:
+        result = page.evaluate("""
+            async (apiUrl) => {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json;odata=verbose',
+                            'Content-Type': 'application/json;odata=verbose'
+                        },
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        return { error: `HTTP ${response.status}: ${response.statusText}`, status: response.status };
+                    }
+                    
+                    const data = await response.json();
+                    return { result: data, error: null, status: response.status };
+                } catch (err) {
+                    return { error: err.toString(), status: 0 };
+                }
+            }
+        """, api_url)
+    except Exception as e:
+        print(f"[ERROR] Failed to discover libraries: {e}")
+        browser.close()
+        sys.exit(1)
+    
+    if result.get('error'):
+        print(f"[ERROR] {result['error']}")
+        browser.close()
+        sys.exit(1)
+    
+    libraries = result.get('result', {}).get('d', {}).get('results', [])
+    
+    if not libraries:
+        print("[ERROR] No document libraries found on this site")
+        browser.close()
+        sys.exit(1)
+    
+    print(f"\nFound {len(libraries)} document library(ies):\n")
+    for idx, lib in enumerate(libraries, 1):
+        title = lib.get('Title', 'Unknown')
+        count = lib.get('ItemCount', 0)
+        desc = lib.get('Description', '')
+        print(f"{idx}. {title} ({count} items)")
+        if desc:
+            print(f"   Description: {desc}")
+    
+    # Let user select library
+    print("\nEnter the number of the library to scan (or 'all' for all libraries): ", end='')
+    try:
+        choice = input().strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        print("\n[CANCELLED] Scan cancelled by user")
+        browser.close()
+        sys.exit(0)
+    
+    if choice == 'all':
+        selected_libraries = libraries
+    else:
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(libraries):
+                selected_libraries = [libraries[idx]]
+            else:
+                print("[ERROR] Invalid selection")
+                browser.close()
+                sys.exit(1)
+        except ValueError:
+            print("[ERROR] Invalid input")
+            browser.close()
+            sys.exit(1)
+    
+    # Scan selected libraries
+    output_file = Path("sharepoint_scan_results.txt")
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(f"SharePoint Scan Results - {SHAREPOINT_SITE}\n")
+        f.write("=" * 80 + "\n\n")
+    
+    total_files_all_libraries = 0
+    total_unique_all_libraries = 0
+    
+    for library in selected_libraries:
+        LIBRARY_NAME = library.get('Title', 'Unknown')
+        print(f"\n{'='*80}")
+        print(f"Scanning library: {LIBRARY_NAME}")
+        print(f"{'='*80}")
+        
+        with open(output_file, 'a', encoding='utf-8') as f:
+            f.write(f"\n{'='*80}\n")
+            f.write(f"Library: {LIBRARY_NAME}\n")
+            f.write(f"{'='*80}\n\n")
+        
+        all_items = []
+        seen_files = set()  # Track (filename, filesize) tuples we've already saved
+        skip = 0
+        page_size = 1000  # Get 1000 items per request
+        skipped_duplicates = 0
+        
+        while True:
+            api_url = f"{SHAREPOINT_SITE}/_api/web/lists/getbytitle('{LIBRARY_NAME}')/items?$select=FileLeafRef,Modified,Author/Title,Editor/Title,FileSizeDisplay&$expand=Author,Editor&$filter=FSObjType eq 0&$top={page_size}&$skip={skip}"
+            
+            try:
+                result = page.evaluate("""
+                    async (apiUrl) => {
+                        try {
+                            const response = await fetch(apiUrl, {
+                                method: 'GET',
+                                headers: {
+                                    'Accept': 'application/json;odata=verbose',
+                                    'Content-Type': 'application/json;odata=verbose'
+                                },
+                                credentials: 'include'
+                            });
+                            
+                            if (!response.ok) {
+                                return { error: `HTTP ${response.status}: ${response.statusText}`, status: response.status };
+                            }
+                            
+                            const data = await response.json();
+                            return { result: data, error: null, status: response.status };
+                        } catch (err) {
+                            return { error: err.toString(), status: 0 };
+                        }
+                    }
+                """, api_url)
+            except Exception as e:
+                print(f"\n[WARNING] Browser timeout or error: {e}")
+                print(f"Saved {len(all_items)} files before timeout")
+                break
+            
+            if result.get('error'):
+                print(f"\nError: {result['error']}")
+                break
+            
+            data = result.get('result', {})
+            items = data.get('d', {}).get('results', [])
+            
+            if not items:
+                break  # No more items
+            
+            all_items.extend(items)
+            
+            # Save batch to file immediately (skip duplicates based on name + size)
+            with open(output_file, 'a', encoding='utf-8') as f:
+                for item in items:
+                    filename = item.get('FileLeafRef', 'Unknown')
+                    filesize = item.get('FileSizeDisplay', '0')
+                    
+                    # Create unique identifier: (filename, filesize)
+                    file_id = (filename, filesize)
+                    
+                    # Skip if we've already seen this exact file (same name AND size)
+                    if file_id in seen_files:
+                        skipped_duplicates += 1
+                        continue
+                    
+                    seen_files.add(file_id)
+                    
+                    modified = item.get('Modified', 'Unknown')
+                    if modified != 'Unknown':
+                        try:
+                            modified = datetime.fromisoformat(modified.replace('Z', '+00:00')).strftime('%a %b %d %H:%M:%S %Y')
+                        except:
+                            pass
+                    author = item.get('Author', {})
+                    owner = author.get('Title', 'Unknown') if isinstance(author, dict) else 'Unknown'
+                    
+                    f.write(f"Filename: {filename}\n")
+                    f.write(f"File Size: {filesize}\n")
+                    f.write(f"Last Modified: {modified}\n")
+                    f.write(f"Owner: {owner}\n")
+                    f.write("-" * 80 + "\n")
+            
+            skip += page_size
+            print(f"  Fetched {len(all_items)} files so far... (Unique: {len(seen_files)}, Skipped duplicates: {skipped_duplicates})")
+            
+            if len(items) < page_size:
+                break  # Last page
+        
+        # Library summary
+        print(f"\n[LIBRARY COMPLETE] {LIBRARY_NAME}")
+        print(f"  Files scanned: {len(all_items)}")
+        print(f"  Unique files: {len(seen_files)}")
+        print(f"  Duplicates skipped: {skipped_duplicates}")
+        
+        total_files_all_libraries += len(all_items)
+        total_unique_all_libraries += len(seen_files)
+    
+    try:
+        browser.close()
+    except:
+        pass
+    
+    # Final summary
+    print(f"\n{'='*80}")
+    print(f"[SUCCESS] All scans complete!")
+    print(f"{'='*80}")
+    print(f"Libraries scanned: {len(selected_libraries)}")
+    print(f"Total files scanned: {total_files_all_libraries}")
+    print(f"Total unique files saved: {total_unique_all_libraries}")
+    print(f"\nResults saved to: {output_file.absolute()}")
+    print("Only unique files were saved (same name + size = duplicate).")

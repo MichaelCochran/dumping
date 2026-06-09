@@ -1,0 +1,44 @@
+﻿import os
+import time
+import sys
+try:
+    import win32security
+    HAS_WIN32 = True
+except ImportError:
+    HAS_WIN32 = False
+
+if len(sys.argv) > 1:
+    file_path = sys.argv[1]
+else:
+    print("Usage: py 'Sharepoint test' <file_path>")
+    sys.exit(1)
+
+if not os.path.exists(file_path):
+    print("File does not exist")
+    sys.exit(1)
+
+# Get filename
+filename = os.path.basename(file_path)
+
+# Get timestamps
+ti_a = os.path.getatime(file_path)
+ti_m = os.path.getmtime(file_path)
+last_accessed = time.ctime(ti_a)
+last_modified = time.ctime(ti_m)
+
+# Get owner
+owner = "Unknown"
+if HAS_WIN32:
+    try:
+        sd = win32security.GetFileSecurity(file_path, win32security.OWNER_SECURITY_INFORMATION)
+        owner_sid = sd.GetSecurityDescriptorOwner()
+        name, domain, type = win32security.LookupAccountSid(None, owner_sid)
+        owner = f"{domain}\\{name}"
+    except:
+        owner = "Could not retrieve"
+
+# Display results
+print(f"Filename: {filename}")
+print(f"Last Accessed: {last_accessed}")
+print(f"Last Modified: {last_modified}")
+print(f"Owner: {owner}")

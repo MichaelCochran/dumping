@@ -1,0 +1,116 @@
+"""
+SSO Session Security
+Bare minimum functions to secure and validate SSO sessions using Playwright
+"""
+
+import logging
+import time
+from pathlib import Path
+
+
+def is_login_page(url: str) -> bool:
+    """Return True if the URL is a Microsoft login/auth page.
+
+    Used to detect if authentication has expired and user needs to re-login.
+
+    Args:
+        url: The current page URL
+
+    Returns:
+        bool: True if URL is a Microsoft authentication page
+    """
+    auth_domains = [
+        "login.microsoftonline.com",
+        "login.live.com",
+        "login.microsoft.com",
+        "aadcdn.msftauth.net",
+    ]
+    return any(d in url.lower() for d in auth_domains)
+
+
+def check_session_valid(playwright, session_path: Path, site_url: str) -> bool:
+    """Check if saved session is still valid.
+
+    Attempts to navigate to the site using saved session cookies.
+    If redirected to login page, session has expired.
+
+    Args:
+        playwright: Playwright instance
+        session_path: Path to saved session file
+        site_url: SharePoint site URL to test
+
+    Returns:
+        bool: True if session is valid, False otherwise
+    """
+    if not session_path.exists():
+        return False
+
+    logging.info("Checking saved session...")
+    browser = playwright.chromium.launch(headless=True)
+    try:
+        context = browser.new_context(storage_state=str(session_path))
+        page = context.new_page()
+        page.goto(site_url, wait_until="domcontentloaded", timeout=15000)
+        time.sleep(0.5)
+        valid = not is_login_page(page.url)
+        if valid:
+            logging.info("Session is valid.")
+        else:
+            logging.info("Session expired.")
+        return valid
+    except Exception as e:
+        logging.warning(f"Session check failed: {e}")
+        return False
+    finally:
+        browser.close()
+
+
+def authenticate(playwright, session_path: Path, site_url: str) -> bool:
+    """Perform interactive login and save session.
+
+    Opens a browser window for user to complete Microsoft authentication.
+    Session is saved for future use to avoid repeated logins.
+
+    Args:
+        playwright: Playwright instance
+        session_path: Path where session will be saved
+        site_url: SharePoint site URL to authenticate to
+
+    Returns:
+        bool: True if authentication successful, False otherwise
+    """
+    logging.info("Opening browser for login…")
+    print("\n" + "=" * 70)
+    print(" ACTION REQUIRED: Browser opening for SharePoint login.")
+    print(" 1. Log in and complete MFA")
+    print(" 2. Navigate to your SharePoint site if not redirected")
+    print(" 3. Press ENTER here after successful login")
+    print("=" * 70 + "\n")
+
+    browser = playwright.chromium.launch(headless=False)
+    context = browser.new_context()
+    page = context.new_page()
+
+    try:
+        page.goto(site_url, timeout=15000)
+    except Exception:
+        pass
+
+    try:
+        input("Press ENTER after successful login...")
+        logging.info("User confirmed login.")
+    except (KeyboardInterrupt, EOFError):
+        logging.error("Login cancelled.")
+        browser.close()
+        return False
+
+    try:
+        context.storage_state(path=str(session_path))
+        logging.info(f"Session saved to: {session_path}")
+    except Exception as e:
+        logging.error(f"Failed to save session: {e}")
+        browser.close()
+        return False
+
+    browser.close()
+    return True
