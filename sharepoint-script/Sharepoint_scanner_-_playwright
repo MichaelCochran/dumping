@@ -23,7 +23,7 @@ except Exception as e:
 
 # SharePoint configuration
 SHAREPOINT_SITE = "https://"
-SESSION_FILE = Path.home() / ".sharepoint_playwright_session.json"
+SESSION_FILE = Path(__file__).parent / ".sharepoint_playwright_session.json"
 
 print("SharePoint Playwright Scanner")
 print("=" * 80)
@@ -56,6 +56,27 @@ with sync_playwright() as p:
     # Navigate to SharePoint
     page.goto(SHAREPOINT_SITE, wait_until="domcontentloaded")
     print(f"Navigated to: {page.url}")
+    
+    # Check if we got redirected to login (session might be invalid)
+    if is_login_page(page.url):
+        print("[ERROR] Session expired or invalid - redirected to login page")
+        print("Deleting invalid session and re-authenticating...")
+        browser.close()
+        SESSION_FILE.unlink(missing_ok=True)
+        
+        # Re-authenticate
+        if not authenticate(p, SESSION_FILE, SHAREPOINT_SITE):
+            print("[ERROR] Authentication failed")
+            sys.exit(1)
+        
+        # Restart with new session
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(storage_state=str(SESSION_FILE))
+        page = context.new_page()
+        page.goto(SHAREPOINT_SITE, wait_until="domcontentloaded")
+        print(f"Re-navigated to: {page.url}")
+    
+    # Page is ready for API calls after domcontentloaded
     
     # Discover available document libraries
     print("\nDiscovering document libraries...")
@@ -137,10 +158,11 @@ with sync_playwright() as p:
             sys.exit(1)
     
     # Scan selected libraries
-    output_file = Path("sharepoint_scan_results.txt")
+    output_file = Path("sharepoint_scan_results.md")
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(f"SharePoint Scan Results - {SHAREPOINT_SITE}\n")
-        f.write("=" * 80 + "\n\n")
+        f.write(f"# SharePoint Scan Results\n\n")
+        f.write(f"**Site:** {SHAREPOINT_SITE}\n\n")
+        f.write("---\n\n")
     
     total_files_all_libraries = 0
     total_unique_all_libraries = 0
@@ -152,15 +174,15 @@ with sync_playwright() as p:
         print(f"{'='*80}")
         
         with open(output_file, 'a', encoding='utf-8') as f:
-            f.write(f"\n{'='*80}\n")
-            f.write(f"Library: {LIBRARY_NAME}\n")
-            f.write(f"{'='*80}\n\n")
+            f.write(f"\n## Library: {LIBRARY_NAME}\n\n")
         
         all_items = []
         seen_files = set()  # Track (filename, filesize) tuples we've already saved
         skip = 0
-        page_size = 1000  # Get 1000 items per request
+        page_size = 5000  # Get 5000 items per request for faster scanning
         skipped_duplicates = 0
+        write_buffer = []  # Buffer items before writing to disk
+        batch_count = 0
         
         while True:
             api_url = f"{SHAREPOINT_SITE}/_api/web/lists/getbytitle('{LIBRARY_NAME}')/items?$select=FileLeafRef,Modified,Author/Title,Editor/Title,FileSizeDisplay&$expand=Author,Editor&$filter=FSObjType eq 0&$top={page_size}&$skip={skip}"
@@ -206,36 +228,45 @@ with sync_playwright() as p:
             
             all_items.extend(items)
             
-            # Save batch to file immediately (skip duplicates based on name + size)
-            with open(output_file, 'a', encoding='utf-8') as f:
-                for item in items:
-                    filename = item.get('FileLeafRef', 'Unknown')
-                    filesize = item.get('FileSizeDisplay', '0')
-                    
-                    # Create unique identifier: (filename, filesize)
-                    file_id = (filename, filesize)
-                    
-                    # Skip if we've already seen this exact file (same name AND size)
-                    if file_id in seen_files:
-                        skipped_duplicates += 1
-                        continue
-                    
-                    seen_files.add(file_id)
-                    
-                    modified = item.get('Modified', 'Unknown')
-                    if modified != 'Unknown':
-                        try:
-                            modified = datetime.fromisoformat(modified.replace('Z', '+00:00')).strftime('%a %b %d %H:%M:%S %Y')
-                        except:
-                            pass
-                    author = item.get('Author', {})
-                    owner = author.get('Title', 'Unknown') if isinstance(author, dict) else 'Unknown'
-                    
-                    f.write(f"Filename: {filename}\n")
-                    f.write(f"File Size: {filesize}\n")
-                    f.write(f"Last Modified: {modified}\n")
-                    f.write(f"Owner: {owner}\n")
-                    f.write("-" * 80 + "\n")
+            # Process items and add to buffer (skip duplicates based on name + size)
+            for item in items:
+                filename = item.get('FileLeafRef', 'Unknown')
+                filesize = item.get('FileSizeDisplay', '0')
+                
+                # Create unique identifier: (filename, filesize)
+                file_id = (filename, filesize)
+                
+                # Skip if we've already seen this exact file (same name AND size)
+                if file_id in seen_files:
+                    skipped_duplicates += 1
+                    continue
+                
+                seen_files.add(file_id)
+                
+                modified = item.get('Modified', 'Unknown')
+                if modified != 'Unknown':
+                    try:
+                        modified = datetime.fromisoformat(modified.replace('Z', '+00:00')).strftime('%a %b %d %H:%M:%S %Y')
+                    except:
+                        pass
+                author = item.get('Author', {})
+                owner = author.get('Title', 'Unknown') if isinstance(author, dict) else 'Unknown'
+                
+                write_buffer.append((filename, filesize, modified, owner))
+            
+            batch_count += 1
+            
+            # Write buffer to file every 3 batches to reduce I/O overhead
+            if batch_count >= 3 or len(items) < page_size:
+                with open(output_file, 'a', encoding='utf-8') as f:
+                    for filename, filesize, modified, owner in write_buffer:
+                        f.write(f"### {filename}\n\n")
+                        f.write(f"- **File Size:** {filesize}\n")
+                        f.write(f"- **Last Modified:** {modified}\n")
+                        f.write(f"- **Owner:** {owner}\n\n")
+                        f.write("---\n\n")
+                write_buffer = []
+                batch_count = 0
             
             skip += page_size
             print(f"  Fetched {len(all_items)} files so far... (Unique: {len(seen_files)}, Skipped duplicates: {skipped_duplicates})")
