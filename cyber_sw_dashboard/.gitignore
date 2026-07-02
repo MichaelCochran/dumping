@@ -1,0 +1,36 @@
+# Session files (contain authentication tokens)
+sp_session.json
+sp_dest_session.json
+
+# Log files
+*.log
+
+# Excel files
+*.xlsx
+!example_template.xlsx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp files
+*.tmp

@@ -37,14 +37,15 @@ Updates the team's central SharePoint tracker with new code reviews.
 - Downloads from **production tracker** (team's central live tracker)
 - Processes and categorizes reviews
 - Identifies **only new reviews** by comparing Review # against existing entries
+- Applies a **date cutoff** (configured as `DATE_CUTOFF` in `code_review_updater.py`) so only reviews on or after that date are considered
 - Saves a local copy as `super/destination_current.xlsx`
-- **Uploads** new rows to the **test tracker** (staging "Testing New Code Review Tracker.xlsx")
+- **Uploads** new rows to the **staging tracker** ("Staging Tracker.xlsx")
 
 ### Features
-- SharePoint upload: Appends new reviews to the **test tracker** (staging file)
+- SharePoint upload: Appends new reviews to the **staging tracker** file
 - Parallel downloads: Simultaneous downloads from source and production trackers
 - Smart duplicate detection: Compares Review # to avoid re-uploading existing reviews
-- Auto-categorization: Organizes into Code, Design, Test, and Other sheets
+- Auto-categorization: Organizes into Code, Design, and Other sheets
 - Session management: Persistent authentication with session files
 - Comprehensive logging: All operations logged to `code_review_updater.log`
 
@@ -60,7 +61,7 @@ python code_review_updater.py
 
 ### Coordinator Usage
 ```bash
-# Full workflow: download → process → deduplicate → upload to test SharePoint
+# Full workflow: download → process → deduplicate → upload to staging SharePoint
 python code_review_updater.py
 
 # Skip download if you already have latest files
@@ -72,7 +73,7 @@ python code_review_updater.py --skip-download
 2. **Process**: Categorize reviews and extract relevant data
 3. **Deduplicate**: Compare Review # to filter out existing entries
 4. **Save Local Copy**: Write updated data to `destination_current.xlsx`
-5. **Upload**: Append only new rows to the **test tracker** on SharePoint
+5. **Upload**: Append only new rows to the **staging tracker** on SharePoint
 
 ---
 
@@ -134,11 +135,11 @@ DEST_READ_CONFIG = {
 }
 ```
 
-**Test tracker configuration** (staging "Testing New Code Review Tracker.xlsx"):
+**Staging tracker configuration** ("Staging Tracker.xlsx"):
 ```python
 DEST_UPLOAD_CONFIG = {
     "site_url": "https://lmco.sharepoint.us/sites/US-NGI-Cyber-Software",
-    "file_path": "/Shared Documents/General/Software Support/Testing New Code Review Tracker.xlsx",
+    "file_path": "/Shared Documents/General/Software Support/Staging Tracker.xlsx",
     ...
 }
 ```

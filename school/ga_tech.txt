@@ -1,0 +1,35 @@
+CS 6035: Introduction to Information Security 
+PUBP 6725: Information Security Policies and Strategies
+CS 6260: Applied Cryptography
+CS 6238: Secure Computer Systems
+CS 6262: Network Security
+CS 6265: Information Security Lab: Reverse Engineering and Binary Exploitation 
+CS 6264: Information Security Lab: System and Network Defenses
+ECE 6320: Power Systems Control and Operation
+ECE 6374: Cyber-Physical Electric Energy Systems
+ECE 6770: Introduction to Cyber-Physical Systems Security
+ECE 8823: Cyber Physical Design and Analysis
+INTA 6103: International Security 
+INTA 6450: Big Data and Security 
+MGT 6727: Privacy for Professionals
+PUBP 6501: Information Policy and Management
+PUBP 6502: Information and Communications Technology Policy
+PUBP 8803: Security Incidence Response
+PUBP 6540: Public Policy for the Digital World
+PUBP 8823: Geopolitics of Cybersecurity
+PUBP 8833:Enterprise Cybersecurity Management
+CS 6210: Advanced Operating Systems
+CS 6239: Enterprise Cybersecurity Management
+CS 6250: ComputerNetworks
+CS 6261: Security Operations and Incident Response
+CS 6264: Information Security Lab: System and Network Defenses
+CS 6265: Information Security Lab: Reverse Engineering and Binary Exploitation 
+CS 6300: Software Development Process
+CS 6400: Database System Concepts& Design
+CS 6747: Advanced Topicsin Malware Analysis
+ECE 6323: Power System Protection
+ECE 6747: Advanced Topicsin Malware Analysis
+ECE 8833: Enterprise Cybersecurity Management
+ECE 8843: Side-Channels and Their Role in Cybersecurity
+INTA 6742: Modeling, Simulation and Military Gaming
+CS/ECE/PUBP 6727: Practicum

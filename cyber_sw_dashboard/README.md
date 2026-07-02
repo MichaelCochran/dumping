@@ -1,34 +1,29 @@
-# Code Review Tracker Suite
+# Code Review Tracker
 
-A comprehensive toolkit for tracking and visualizing code review status across SharePoint sites. Designed for team collaboration with individual local tracking and shared dashboard viewing.
+A comprehensive toolkit for tracking and visualizing code review status across SharePoint sites. Downloads from production tracker, applies date cutoff filtering, and uploads to staging tracker for review.
 
 ---
 
-## � Project Structure
+## Project Structure
 
 ```
 Code Review Updater/
-├── local/                  # Tools for individual team members
-│   ├── code_review_local.py   # Download and track reviews locally
-│   ├── dashboard_local.py     # Visual dashboard with integrated refresh
-│   └── README.md              # Detailed documentation for local tools
-│
-├── super/                  # Tools for team coordinators only
-│   ├── code_review_updater.py # Upload reviews to shared SharePoint
-│   ├── dashboard_app.py       # Basic dashboard viewer
-│   └── README.md              # Detailed documentation for coordinator tools
-│
-├── user_filters.json       # Repository filter configuration
-└── README.md               # This file
+├── code_review_updater.py    # Main updater script
+├── dashboard_app.py           # Visual dashboard viewer
+├── user_filters.json          # Repository filter configuration (optional)
+├── destination_current.xlsx   # Local review data (auto-generated)
+├── staging_current.xlsx       # Staging data (auto-generated)
+├── sp_session.json            # SharePoint sessions (auto-generated)
+├── sp_dest_session.json       # SharePoint sessions (auto-generated)
+├── requirements.txt           # Python dependencies
+└── README.md                  # This file
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### For Individual Team Members (Everyone)
-
-**👉 Go to [`local/`](local/) folder and follow the README**
+### Installation
 
 1. Install dependencies:
    ```bash
@@ -36,93 +31,106 @@ Code Review Updater/
    playwright install chromium
    ```
 
-2. Authenticate once:
+### First Run - Authenticate
+
+2. Run the updater once to authenticate:
    ```bash
-   cd local
-   python code_review_local.py
-   ```
-
-3. Use the dashboard daily:
-   ```bash
-   python dashboard_local.py
-   # Click "↻ Refresh Data" to fetch latest reviews
-   ```
-
-**[📖 Full Documentation →](local/README.md)**
-
----
-
-### For Team Coordinators Only
-
-**⚠️ WARNING: Only the designated coordinator should use these tools**
-
-**👉 Go to [`super/`](super/) folder and follow the README**
-
-1. Install dependencies (same as above)
-
-2. Run the updater periodically:
-   ```bash
-   cd super
    python code_review_updater.py
    ```
+   - Browser will open for SharePoint login
+   - Complete MFA and wait for SharePoint to load
+   - Press Enter when done
 
-**[📖 Full Documentation →](super/README.md)**
+### Daily Use - Dashboard
 
----
-
-## 📋 What's What?
-
-### Local Tools (For Everyone)
-- **`code_review_local.py`** - Downloads and processes code reviews, saves locally
-- **`dashboard_local.py`** - Visual dashboard with one-click refresh
-- **Safe for multi-user** - Everyone can run these independently without conflicts
-
-### Super Tools (Coordinator Only)
-- **`code_review_updater.py`** - Uploads new reviews to shared SharePoint tracker
-- **`dashboard_app.py`** - Basic dashboard viewer
-- **⚠️ Single-user only** - Multiple people running these causes conflicts
+3. Launch the dashboard:
+   ```bash
+   python dashboard_app.py
+   ```
+   - Click "⭮ Refresh Data" to update from SharePoint
+   - View outstanding reviews grouped by repository
+   - Expandable cards show review details
 
 ---
 
-## 🎨 Features
+## Features
 
-### Local Dashboard (`dashboard_local.py`)
-- 🔄 **Integrated Refresh**: One-click download and update from SharePoint
-- 🎨 **Color-Coded Status**: Red (10+), Yellow (6-9), Green (1-5), Blue (0)
-- � **Repository Filtering**: Filter by repo name (partial match)
-- � **Expandable Cards**: Click to view detailed review information
-- 🚫 **Cancelled/Broken Reviews**: Separate view for non-actionable items
-- ⚡ **Lazy Loading**: Efficient rendering for large datasets
+### Code Review Updater (`code_review_updater.py`)
+- **Downloads** from production SharePoint tracker
+- **Filters** by configurable date cutoff (only new reviews)
+- **Deduplicates** against existing entries
+- **Uploads** new reviews to staging SharePoint tracker
+- **Saves** local copies for dashboard viewing
+
+### Dashboard (`dashboard_app.py`)
+- **Color-coded status**: Red (10+), Yellow (6-9), Green (1-5), Blue (0)
+- **Repository filtering** via `user_filters.json` (partial match, case-insensitive)
+- **Expandable cards**: Click to view detailed review information
+- **Cancelled/Broken reviews**: Separate view for notes containing "cancelled" or "pipeline"
+- **Other reviews**: Separate view for reviews with notes
+- **Integrated refresh**: One-click update from SharePoint
+- **Auto-refresh**: Hourly background checks for updates
 
 ### Repository Filtering
-Edit `user_filters.json` to customize dashboard view:
+
+Create `user_filters.json` to show only specific repositories:
 ```json
 {
   "repos": ["kv", "msv"]
 }
 ```
-- Empty list `[]` shows all repositories
+- Empty list `[]` or missing file shows all repositories
 - Supports partial matching (case-insensitive)
 
 ---
 
-## 📊 Files Reference
+## Files Reference
 
-| File | Location | Created By | Purpose |
-|------|----------|------------|---------|
-| `code_review_local.py` | `local/` | User | Individual local tracker |
-| `dashboard_local.py` | `local/` | User | Dashboard with integrated refresh |
-| `code_review_updater.py` | `super/` | User | SharePoint uploader (coordinator only) |
-| `dashboard_app.py` | `super/` | User | Basic dashboard viewer |
-| `user_filters.json` | Root | User | Repository filter configuration |
-| `destination_current.xlsx` | Root | Scripts | Local copy of review data (auto-created) |
-| `code_review_updater.log` | Root | Scripts | Detailed operation logs (auto-created) |
-| `sp_session.json` | Root | Scripts | Source SharePoint session (auto-created) |
-| `sp_dest_session.json` | Root | Scripts | Destination SharePoint session (auto-created) |
+| File | Created By | Purpose |
+|------|------------|---------|
+| `code_review_updater.py` | You | Main updater - downloads, filters, uploads reviews |
+| `dashboard_app.py` | You | Visual dashboard with integrated refresh |
+| `user_filters.json` | You (optional) | Repository filter configuration |
+| `destination_current.xlsx` | Script | Production tracker data for dashboard |
+| `staging_current.xlsx` | Script | Staging tracker data for dashboard |
+| `sp_session.json` | Script | Source SharePoint session (auto-created) |
+| `sp_dest_session.json` | Script | Destination SharePoint session (auto-created) |
+| `requirements.txt` | You | Python dependencies |
 
 ---
 
-## 🆘 Quick Troubleshooting
+## Configuration
+
+### Date Cutoff
+
+Edit `code_review_updater.py` to change the date cutoff:
+```python
+DATE_CUTOFF = "2026-05-01"  # Only process reviews on or after this date
+```
+
+### SharePoint URLs
+
+Update these in `code_review_updater.py`:
+```python
+SOURCE_CONFIG = {
+    "site_url": "https://your-source-sharepoint-site",
+    "file_path": "/path/to/source/file.xlsx",
+}
+
+DEST_READ_CONFIG = {
+    "site_url": "https://your-dest-sharepoint-site",
+    "file_path": "/path/to/production/tracker.xlsx",
+}
+
+DEST_UPLOAD_CONFIG = {
+    "site_url": "https://your-dest-sharepoint-site",
+    "file_path": "/path/to/staging/tracker.xlsx",
+}
+```
+
+---
+
+## Troubleshooting
 
 ### Session Expired
 ```bash
@@ -131,48 +139,34 @@ del sp_session.json sp_dest_session.json  # Windows
 rm sp_session.json sp_dest_session.json   # Linux/Mac
 
 # Then run again
-cd local
-python code_review_local.py
+python code_review_updater.py
 ```
 
 ### Dashboard Shows No Data
 ```bash
-# Option 1: Use integrated refresh button
-python dashboard_local.py
-# Then click "↻ Refresh Data"
+# Run updater to download data
+python code_review_updater.py
 
-# Option 2: Manual refresh
-python code_review_local.py
-python dashboard_local.py
+# Then launch dashboard
+python dashboard_app.py
 ```
 
+### Upload Fails (File Locked)
+- Close the staging tracker Excel file if you have it open
+- Ask others to close the file
+- Check if file is checked out in SharePoint
+- Wait a moment and try again
+
 ### More Help
-- **Local tools issues**: See [`local/README.md`](local/README.md)
-- **Coordinator tools issues**: See [`super/README.md`](super/README.md)
-- **Check logs**: Review `code_review_updater.log`
+- **Check logs**: Review console output for detailed error messages
+- **Specification**: See `SPECIFICATION_SUPER.md` for full architecture details
 
 ---
 
-## 📚 Documentation
+## Workflow
 
-- **[Local Tools (Everyone) →](local/README.md)**
-  - `code_review_local.py` - Download and track reviews
-  - `dashboard_local.py` - Visual dashboard with refresh
-
-- **[Super Tools (Coordinator Only) →](super/README.md)**
-  - `code_review_updater.py` - Upload to SharePoint
-  - `dashboard_app.py` - Basic viewer
-
----
-
-## ⚡ Recommended Workflow
-
-### For Individual Team Members
-1. **First Time**: `cd local && python code_review_local.py` to authenticate
-2. **Daily/Weekly**: Launch dashboard and click "↻ Refresh Data"
-3. **Never**: Run anything in `super/` folder
-
-### For Team Coordinator
-1. **For Personal Use**: Use `local/` tools like everyone else
-2. **Periodically**: Run `super/code_review_updater.py` to update shared tracker
-3. **Monitor**: Check logs and communicate updates to team
+1. **First Time**: Run `python code_review_updater.py` to authenticate
+2. **Daily/Weekly**: 
+   - Launch dashboard: `python dashboard_app.py`
+   - Click "⭮ Refresh Data" to update from SharePoint
+3. **Monitor**: Review outstanding reports and track completion
