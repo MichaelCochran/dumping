@@ -1,0 +1,10 @@
+{
+  "check_interval_seconds": 300,
+  "monitor_folders": ["Inbox"],
+  "tasks_output_file": "generated_tasks.json",
+  "processed_emails_file": "processed_emails.json",
+  "max_emails_per_run": 25,
+  "use_ai": false,
+  "ai_api_key": "",
+  "ai_model": "gpt-4o-mini"
+}

@@ -1,0 +1,92 @@
+{
+  "groups": {
+    "group_1": {
+      "name": "My Tasks",
+      "color": "#4A90E2",
+      "order": 0
+    }
+  },
+  "filters": {},
+  "tasks": {
+    "B406 Fire Alarm Testing Tomorrow, 7/9 5-7pm_Fc-Space, HSV-Communications (RESOURCE)_2026-07-08T15:08:02.945315": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "EXTERNAL: RE: LM-GMX Cyber Summit Follow-Up TIM_Hartman, Gregory C Lt Col MDA GMX (USA)_2026-07-08T15:08:03.005673": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "FW: LOE Access Package for Tracy Monteith_Monteith, Tracy (US)_2026-07-08T15:08:03.030186": {
+      "group": "group_1",
+      "column": "In Work"
+    },
+    "UPDATE Resolved: DarkStar Authentication  _Fc-EO, Classified IT Outages (RESOURCE)_2026-07-08T15:08:03.049038": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "Accepted: AUR CDR Form 100 Review_Langham, Courtney R (US)_2026-07-08T15:08:03.070851": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "INITIAL Outage: DarkStar Authentication  _Fc-EO, Classified IT Outages (RESOURCE)_2026-07-08T15:08:03.094131": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "Accepted: AUR CDR Form 100 Review_Koontz, Samuel P (US)_2026-07-08T15:08:03.114202": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "Declined: AUR CDR Form 100 Review_Palmaffy, Marc (US)_2026-07-08T15:08:03.135663": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "Accepted: AUR CDR Form 100 Review_Waldrop, Gabriel (US)_2026-07-08T15:08:03.155519": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "RE: SBI Unclassified Access request_Butler, Angenea L (US)_2026-07-08T15:08:03.186407": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "Accepted: AUR CDR Form 100 Review_Turner, Jasmine (US)_2026-07-09T14:39:40.271311": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "PART I & PART II: Phrasebook#_Fc-EO, CIT-Phrasebook (RESOURCE)_2026-07-09T14:39:40.296464": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "DarkStar Account & Phrasebook Information_Nikiforov, Egor (US)_2026-07-09T14:39:40.321329": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "SMD Summer Photo Contest (Deadline 7/30) \u2013 Capture the Season & Win!_Fc-Space, SMD_Engage (RESOURCE)_2026-07-09T14:39:40.344267": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "SITR IV&V_Ogden, Nathan J (US)_2026-07-09T14:39:40.366205": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "Lockheed Martin On the Go! Newsletter \u2013 June/July is Now Available!_Travel, Global (RESOURCE)_2026-07-09T14:39:40.387728": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "SBI Unclassified Access request_Hazzard, Erica D (US)_2026-07-09T14:39:40.716814": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "EXTERNAL: Re: LMCO Space - Black Duck - Follow up _Gregory Gillette_2026-07-09T14:39:40.765869": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "FW: *ACTION REQUIRED Mid-Summer Check-In: Intern Performance Review, Offboarding Survey, and Intern Feedback _White, Penny L (US)_2026-07-09T14:39:40.802492": {
+      "group": "group_1",
+      "column": "Planning"
+    },
+    "FW: ACTION: Intern Mid-Summer Check-In with Your Leader_Dean, Lenora (US)_2026-07-09T14:39:40.827206": {
+      "group": "group_1",
+      "column": "Planning"
+    }
+  }
+}
