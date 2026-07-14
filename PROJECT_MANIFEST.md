@@ -145,6 +145,41 @@ python self-assessment/self_assessment_app_v2.py
 
 ---
 
+### 5. **YTSpecific** (`YTSpecific/`)
+iOS app that locks playback to a single YouTube channel at a time — pick a
+channel and it queues up an endless stream of just that channel's uploads,
+skipping anything already watched. View history and likes are tracked
+locally only; likes are never sent to YouTube.
+
+**Main Files:**
+- `Sources/YTSpecificApp.swift` - App entry point
+- `Sources/Services/YouTubeAPIService.swift` - YouTube Data API v3 client
+- `Sources/Services/PlaybackQueueManager.swift` - Per-channel unwatched queue logic
+- `Sources/Views/PlayerView.swift` - YouTube IFrame player + like/skip controls
+
+**Prerequisites:**
+```bash
+# macOS + Xcode required (this is a native iOS app)
+brew install xcodegen
+```
+
+**Run Commands:**
+```bash
+cd YTSpecific
+xcodegen generate
+open YTSpecific.xcodeproj
+# Then Run in Xcode on an iOS 17+ simulator or device
+```
+
+**Documentation:**
+- `YTSpecific/README.md` - Full setup and architecture guide
+
+**Configuration:**
+- Requires a free YouTube Data API v3 key (Google Cloud Console), entered
+  in-app under Settings and stored in the device Keychain
+
+---
+
 ## 🚀 Quick Start - Running All Projects
 
 ### From Root Directory Commands
@@ -190,6 +225,7 @@ pip install -r self-assessment/requirements.txt
 | Journal App | ✅ Ready | PyQt5, cryptography, anthropic | Yes | Optional |
 | Course Formatter | ✅ Ready | None (stdlib) | No | No |
 | Self-Assessment | ✅ Ready | matplotlib, numpy, tkinter | Yes | No |
+| YTSpecific | ✅ Ready (needs Xcode to build) | xcodegen (build-time only) | Yes (iOS) | Yes (free) |
 
 ---
 
@@ -211,4 +247,4 @@ pip install -r self-assessment/requirements.txt
 
 ---
 
-*Last updated: 2026-07-01*
+*Last updated: 2026-07-14*
