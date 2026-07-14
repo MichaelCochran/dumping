@@ -43,6 +43,7 @@ class TaskCard(QtWidgets.QFrame):
         self.group = group
         self.column = column
         self.board_ref = board_ref
+        self.is_selected = False
         
         priority = task_data.get("priority", "medium").lower()
         self.priority_color = PRIORITY_COLORS.get(priority, PRIORITY_COLORS["medium"])
@@ -51,16 +52,8 @@ class TaskCard(QtWidgets.QFrame):
         self.setObjectName("taskCard")
         self.setFrameShape(QtWidgets.QFrame.Shape.Box)
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_Hover, True)
-        self.setStyleSheet(f"""
-            QFrame#taskCard {{
-                background-color: white;
-                border: 2px solid #BDC3C7;
-                border-radius: 6px;
-            }}
-            QFrame#taskCard:hover {{
-                border: 2px solid {self.priority_color};
-            }}
-        """)
+        self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
+        self._update_style()
         
         # Add shadow effect
         shadow = QtWidgets.QGraphicsDropShadowEffect()
@@ -152,9 +145,62 @@ class TaskCard(QtWidgets.QFrame):
         
         layout.addWidget(content)
     
+    def _update_style(self):
+        """Update card styling based on selection state."""
+        if self.is_selected:
+            self.setStyleSheet(f"""
+                QFrame#taskCard {{
+                    background-color: #E8F4F8;
+                    border: 3px solid #3498DB;
+                    border-radius: 6px;
+                }}
+            """)
+        else:
+            self.setStyleSheet(f"""
+                QFrame#taskCard {{
+                    background-color: white;
+                    border: 2px solid #BDC3C7;
+                    border-radius: 6px;
+                }}
+                QFrame#taskCard:hover {{
+                    border: 2px solid {self.priority_color};
+                }}
+            """)
+    
+    def mousePressEvent(self, event):
+        """Toggle selection on click."""
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            self.is_selected = not self.is_selected
+            self._update_style()
+            self.board_ref.update_selection_count()
+        super().mousePressEvent(event)
+    
     def mouseDoubleClickEvent(self, event):
         """Show details on double-click."""
         self.board_ref.show_task_details(self.task_data)
+    
+    def contextMenuEvent(self, event):
+        """Show context menu on right-click."""
+        menu = QtWidgets.QMenu(self)
+        
+        edit_action = menu.addAction("✏️ Edit Task")
+        details_action = menu.addAction("📋 View Details")
+        menu.addSeparator()
+        move_action = menu.addAction("➡️ Move Task")
+        menu.addSeparator()
+        delete_action = menu.addAction("🗑️ Delete Task")
+        
+        action = menu.exec(event.globalPos())
+        
+        if action == edit_action:
+            self.board_ref.edit_task_properties(self)
+        elif action == details_action:
+            self.board_ref.show_task_details(self.task_data)
+        elif action == move_action:
+            self._show_move_menu()
+        elif action == delete_action:
+            self.is_selected = True
+            self.board_ref.delete_selected_tasks()
     
     def _show_move_menu(self):
         """Show context menu to move card."""
@@ -227,6 +273,12 @@ class KanbanBoard(QtWidgets.QMainWindow):
         file_menu.addAction("Load New Emails", self.load_new_emails)
         file_menu.addSeparator()
         file_menu.addAction("Exit", self.close)
+        
+        edit_menu = menubar.addMenu("Edit")
+        delete_action = edit_menu.addAction("Delete Selected Tasks", self.delete_selected_tasks)
+        delete_action.setShortcut("Delete")
+        edit_menu.addAction("Select All", self.select_all_tasks)
+        edit_menu.addAction("Deselect All", self.deselect_all_tasks)
         
         groups_menu = menubar.addMenu("Groups")
         groups_menu.addAction("Add New Group", self.add_group_dialog)
@@ -628,6 +680,136 @@ Method: {task.get('method', 'N/A')}
         
         dialog.exec()
     
+    def edit_task_properties(self, card: TaskCard):
+        """Edit task priority and category."""
+        task = card.task_data
+        task_id = self.get_task_id(task)
+        
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Edit Task Properties")
+        dialog.resize(400, 300)
+        
+        layout = QtWidgets.QFormLayout(dialog)
+        layout.setSpacing(15)
+        
+        # Title editing
+        title_edit = QtWidgets.QLineEdit()
+        title_edit.setText(task.get("task_title", ""))
+        title_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 5px;
+                font-size: 10pt;
+            }
+        """)
+        layout.addRow("Title:", title_edit)
+        
+        # Priority selection
+        priority_combo = QtWidgets.QComboBox()
+        priority_combo.addItems(["high", "medium", "low"])
+        current_priority = task.get("priority", "medium").lower()
+        priority_combo.setCurrentText(current_priority)
+        priority_combo.setStyleSheet("""
+            QComboBox {
+                padding: 5px;
+                font-size: 10pt;
+            }
+        """)
+        layout.addRow("Priority:", priority_combo)
+        
+        # Category selection/edit
+        category_combo = QtWidgets.QComboBox()
+        category_combo.setEditable(True)
+        common_categories = ["FYI", "Review", "Action Required", "Meeting", "Follow-up", "Question", "Task"]
+        category_combo.addItems(common_categories)
+        current_category = task.get("category", "Task")
+        category_combo.setCurrentText(current_category)
+        category_combo.setStyleSheet("""
+            QComboBox {
+                padding: 5px;
+                font-size: 10pt;
+            }
+        """)
+        layout.addRow("Category:", category_combo)
+        
+        # Buttons
+        button_layout = QtWidgets.QHBoxLayout()
+        
+        save_btn = QtWidgets.QPushButton("Save")
+        save_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #27AE60;
+                color: white;
+                font-weight: bold;
+                padding: 8px 20px;
+                border: none;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background-color: #229954;
+            }
+        """)
+        
+        cancel_btn = QtWidgets.QPushButton("Cancel")
+        cancel_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #95A5A6;
+                color: white;
+                font-weight: bold;
+                padding: 8px 20px;
+                border: none;
+                border-radius: 3px;
+            }
+            QPushButton:hover {
+                background-color: #7F8C8D;
+            }
+        """)
+        
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+        layout.addRow("", button_layout)
+        
+        # Connect buttons
+        cancel_btn.clicked.connect(dialog.reject)
+        
+        def save_changes():
+            new_title = title_edit.text().strip()
+            new_priority = priority_combo.currentText()
+            new_category = category_combo.currentText()
+            
+            if not new_title:
+                QtWidgets.QMessageBox.warning(
+                    self, "Invalid Input", "Title cannot be empty!"
+                )
+                return
+            
+            # Update task in the tasks list
+            for i, t in enumerate(self.tasks):
+                if self.get_task_id(t) == task_id:
+                    self.tasks[i]["task_title"] = new_title
+                    self.tasks[i]["priority"] = new_priority
+                    self.tasks[i]["category"] = new_category
+                    break
+            
+            # Save to file
+            try:
+                with open(self.tasks_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.tasks, f, indent=2)
+                
+                dialog.accept()
+                self.refresh_board()
+                
+                QtWidgets.QMessageBox.information(
+                    self, "Success", "Task properties updated successfully!"
+                )
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self, "Error", f"Failed to save changes:\n{str(e)}"
+                )
+        
+        save_btn.clicked.connect(save_changes)
+        
+        dialog.exec()
+    
     def load_new_emails(self):
         """Load new emails from email processor."""
         try:
@@ -652,6 +834,81 @@ Method: {task.get('method', 'N/A')}
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self, "Error", f"Failed to run email processor:\n{str(e)}"
+            )
+    
+    def update_selection_count(self):
+        """Update window title with selection count."""
+        selected_count = sum(1 for card in self.task_cards.values() if card.is_selected)
+        if selected_count > 0:
+            self.setWindowTitle(f"Email Task Kanban Board - {selected_count} task(s) selected")
+        else:
+            self.setWindowTitle("Email Task Kanban Board")
+    
+    def get_selected_cards(self) -> List[TaskCard]:
+        """Get all currently selected cards."""
+        return [card for card in self.task_cards.values() if card.is_selected]
+    
+    def select_all_tasks(self):
+        """Select all visible task cards."""
+        for card in self.task_cards.values():
+            card.is_selected = True
+            card._update_style()
+        self.update_selection_count()
+    
+    def deselect_all_tasks(self):
+        """Deselect all task cards."""
+        for card in self.task_cards.values():
+            card.is_selected = False
+            card._update_style()
+        self.update_selection_count()
+    
+    def delete_selected_tasks(self):
+        """Delete all selected tasks."""
+        selected_cards = self.get_selected_cards()
+        
+        if not selected_cards:
+            QtWidgets.QMessageBox.information(
+                self, "No Selection", "No tasks selected. Click tasks to select them, then delete."
+            )
+            return
+        
+        reply = QtWidgets.QMessageBox.question(
+            self,
+            "Confirm Delete",
+            f"Delete {len(selected_cards)} selected task(s)?\n\nThis will remove them from the board and the task file.",
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No
+        )
+        
+        if reply == QtWidgets.QMessageBox.StandardButton.Yes:
+            # Remove from tasks list and board state
+            for card in selected_cards:
+                task_id = self.get_task_id(card.task_data)
+                
+                # Remove from tasks list
+                self.tasks = [t for t in self.tasks if self.get_task_id(t) != task_id]
+                
+                # Remove from board state
+                if task_id in self.board_state:
+                    del self.board_state[task_id]
+            
+            # Save updated tasks to file
+            try:
+                with open(self.tasks_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.tasks, f, indent=2)
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self, "Error", f"Failed to save tasks file:\n{str(e)}"
+                )
+                return
+            
+            # Save board state
+            self.save_board_state()
+            
+            # Refresh board
+            self.refresh_board()
+            
+            QtWidgets.QMessageBox.information(
+                self, "Success", f"Deleted {len(selected_cards)} task(s) successfully!"
             )
     
     def add_group_dialog(self):
