@@ -24,24 +24,30 @@ struct ContentView: View {
                     })
                 } else {
                     ChannelSearchView { selected in
-                        channel = selected
-                        Task {
-                            queueManager.configure(modelContext: modelContext)
-                            await queueManager.loadChannel(selected, order: playbackOrder)
-                        }
+                        selectChannel(selected)
                     }
                 }
             }
             .toolbar {
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button { showingHistory = true } label: {
-                        Image(systemName: "clock.arrow.circlepath")
-                    }
-                    Button { showingLiked = true } label: {
-                        Image(systemName: "heart")
-                    }
-                    Button { showingSettings = true } label: {
-                        Image(systemName: "gearshape")
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button {
+                            showingHistory = true
+                        } label: {
+                            Label("History", systemImage: "clock.arrow.circlepath")
+                        }
+                        Button {
+                            showingLiked = true
+                        } label: {
+                            Label("Liked", systemImage: "heart")
+                        }
+                        Button {
+                            showingSettings = true
+                        } label: {
+                            Label("Settings", systemImage: "gearshape")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -59,6 +65,15 @@ struct ContentView: View {
                 channel = saved
                 Task { await queueManager.loadChannel(saved, order: playbackOrder) }
             }
+        }
+    }
+
+    private func selectChannel(_ selected: YouTubeChannel) {
+        ChannelHistoryStore.record(selected)
+        channel = selected
+        Task {
+            queueManager.configure(modelContext: modelContext)
+            await queueManager.loadChannel(selected, order: playbackOrder)
         }
     }
 }

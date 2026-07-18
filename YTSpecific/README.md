@@ -9,7 +9,9 @@ to YouTube.
 ## How it works
 
 - **Channel picker** — search by channel name or `@handle`, resolved via the
-  YouTube Data API v3.
+  YouTube Data API v3. Previously watched channels show up as a "Recent
+  Channels" list so you don't have to retype a name each time (local-only,
+  swipe to remove an entry).
 - **Playback** — videos play through Google's own
   [`youtube-ios-player-helper`](https://github.com/youtube/youtube-ios-player-helper)
   library (a `WKWebView`-based wrapper with the embed origin set up
@@ -23,6 +25,10 @@ to YouTube.
   app tells you you're caught up instead of silently stopping.
 - **History & Likes** — stored locally with SwiftData. Liking a video never
   makes a network call; it's purely a local record you can review or remove.
+- **Orientation** — rotating the device to landscape expands the video to
+  fill the screen (YouTube's player letterboxes it correctly); rotating back
+  to portrait returns to the normal layout with title/like/skip below the
+  video.
 - **API key** — stored in the device Keychain via Settings, not committed to
   git, not bundled in the app.
 
@@ -69,7 +75,7 @@ YTSpecific/
     YTSpecificApp.swift
     Models/                    # YouTubeChannel, YouTubeVideo, PlaybackOrder
     Persistence/                # SwiftData models: WatchedVideoRecord, LikedVideoRecord
-    Services/                  # YouTubeAPIService, PlaybackQueueManager, APIKeyStore, RecentChannelStore
+    Services/                  # YouTubeAPIService, PlaybackQueueManager, APIKeyStore, RecentChannelStore, ChannelHistoryStore
     Views/                     # ContentView, ChannelSearchView, PlayerView, YouTubePlayerWebView, HistoryView, LikedVideosView, SettingsView
   Resources/
     Assets.xcassets
