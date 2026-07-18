@@ -1,9 +1,11 @@
 import SwiftUI
-@preconcurrency import WebKit
+import YouTubeiOSPlayerHelper
 
-/// Wraps YouTube's own IFrame Player API in a WKWebView. This is the only
-/// legitimate way to play YouTube video content on iOS — the app just controls
-/// *which* video ID loads next, playback itself is YouTube's official player.
+/// Wraps Google's own `youtube-ios-player-helper` (YTPlayerView) — the
+/// officially sanctioned way to embed YouTube playback on iOS. A hand-rolled
+/// WKWebView pointed at a spoofed "https://www.youtube.com" baseURL gets
+/// rejected by YouTube for every video (looks like an origin-spoofing
+/// attempt); this library sets up the embed origin correctly.
 struct YouTubePlayerWebView: UIViewRepresentable {
     let videoId: String
     let onEnded: () -> Void
@@ -13,70 +15,28 @@ struct YouTubePlayerWebView: UIViewRepresentable {
         Coordinator(onEnded: onEnded, onError: onError)
     }
 
-    func makeUIView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.allowsInlineMediaPlayback = true
-        configuration.mediaTypesRequiringUserActionForPlayback = []
-        configuration.userContentController.add(context.coordinator, name: "playerEvents")
-
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.scrollView.isScrollEnabled = false
-        webView.isOpaque = false
-        webView.backgroundColor = .black
+    func makeUIView(context: Context) -> YTPlayerView {
+        let playerView = YTPlayerView()
+        playerView.delegate = context.coordinator
         context.coordinator.currentVideoId = videoId
-        webView.loadHTMLString(Self.html(videoId: videoId), baseURL: URL(string: "https://www.youtube.com"))
-        return webView
+        _ = playerView.load(withVideoId: videoId, playerVars: [
+            "playsinline": 1,
+            "rel": 0
+        ])
+        return playerView
     }
 
-    func updateUIView(_ webView: WKWebView, context: Context) {
+    func updateUIView(_ playerView: YTPlayerView, context: Context) {
         if context.coordinator.currentVideoId != videoId {
             context.coordinator.currentVideoId = videoId
-            webView.loadHTMLString(Self.html(videoId: videoId), baseURL: URL(string: "https://www.youtube.com"))
+            _ = playerView.load(withVideoId: videoId, playerVars: [
+                "playsinline": 1,
+                "rel": 0
+            ])
         }
     }
 
-    static func dismantleUIView(_ webView: WKWebView, coordinator: Coordinator) {
-        webView.configuration.userContentController.removeScriptMessageHandler(forName: "playerEvents")
-    }
-
-    private static func html(videoId: String) -> String {
-        """
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-        <style>html,body,#player{margin:0;padding:0;width:100%;height:100%;background:#000;}</style>
-        </head>
-        <body>
-        <div id="player"></div>
-        <script src="https://www.youtube.com/iframe_api"></script>
-        <script>
-          var player;
-          function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-              height: '100%',
-              width: '100%',
-              videoId: '\(videoId)',
-              playerVars: { playsinline: 1, autoplay: 1, rel: 0 },
-              events: {
-                'onStateChange': onPlayerStateChange,
-                'onError': onPlayerError
-              }
-            });
-          }
-          function onPlayerStateChange(event) {
-            window.webkit.messageHandlers.playerEvents.postMessage({ event: 'stateChange', data: event.data });
-          }
-          function onPlayerError(event) {
-            window.webkit.messageHandlers.playerEvents.postMessage({ event: 'error', data: event.data });
-          }
-        </script>
-        </body>
-        </html>
-        """
-    }
-
-    final class Coordinator: NSObject, WKScriptMessageHandler {
+    final class Coordinator: NSObject, YTPlayerViewDelegate {
         let onEnded: () -> Void
         let onError: () -> Void
         var currentVideoId: String = ""
@@ -86,16 +46,20 @@ struct YouTubePlayerWebView: UIViewRepresentable {
             self.onError = onError
         }
 
-        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-            guard let body = message.body as? [String: Any],
-                  let event = body["event"] as? String else { return }
-
-            // YT.PlayerState.ENDED == 0
-            if event == "stateChange", let data = body["data"] as? Int, data == 0 {
-                DispatchQueue.main.async { self.onEnded() }
-            } else if event == "error" {
-                DispatchQueue.main.async { self.onError() }
+        // Explicit selectors so conformance doesn't depend on guessing the
+        // Swift name the ObjC importer would have generated for these
+        // @optional protocol methods.
+        @objc(playerView:didChangeToState:)
+        func playerView(_ playerView: YTPlayerView, didChangeToState state: YTPlayerState) {
+            // kYTPlayerStateEnded == 1
+            if state.rawValue == 1 {
+                onEnded()
             }
+        }
+
+        @objc(playerView:receivedError:)
+        func playerView(_ playerView: YTPlayerView, receivedError error: YTPlayerError) {
+            onError()
         }
     }
 }

@@ -6,6 +6,10 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
+packages:
+  YouTubeiOSPlayerHelper:
+    url: https://github.com/youtube/youtube-ios-player-helper
+    from: 1.0.4
 targets:
   YTSpecific:
     type: application
@@ -14,6 +18,8 @@ targets:
       - path: Sources
     resources:
       - path: Resources/Assets.xcassets
+    dependencies:
+      - package: YouTubeiOSPlayerHelper
     info:
       path: Resources/Info.plist
       properties:

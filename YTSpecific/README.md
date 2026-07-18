@@ -10,10 +10,13 @@ to YouTube.
 
 - **Channel picker** — search by channel name or `@handle`, resolved via the
   YouTube Data API v3.
-- **Playback** — videos play through YouTube's own embedded IFrame player
-  (`WKWebView`). This is the only ToS-compliant way to play YouTube content on
+- **Playback** — videos play through Google's own
+  [`youtube-ios-player-helper`](https://github.com/youtube/youtube-ios-player-helper)
+  library (a `WKWebView`-based wrapper with the embed origin set up
+  correctly). This is the only ToS-compliant way to play YouTube content on
   iOS; the app just decides *which* video ID loads next and auto-advances
-  when a video ends.
+  when a video ends. Pulled in via Swift Package Manager — Xcode downloads it
+  automatically the first time you open/build the project (needs internet).
 - **Queue** — built from the channel's full uploads list, filtered to exclude
   anything in your local watch history, ordered newest-first / oldest-first /
   shuffled (configurable in Settings). When the filtered queue is empty, the
