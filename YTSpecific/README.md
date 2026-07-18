@@ -25,10 +25,12 @@ to YouTube.
   app tells you you're caught up instead of silently stopping.
 - **History & Likes** — stored locally with SwiftData. Liking a video never
   makes a network call; it's purely a local record you can review or remove.
-- **Orientation** — rotating the device to landscape expands the video to
-  fill the screen (YouTube's player letterboxes it correctly); rotating back
-  to portrait returns to the normal layout with title/like/skip below the
-  video.
+- **Orientation & sizing** — each video's real aspect ratio is fetched from
+  the Data API (`videos.list?part=player`) and used to size the player box,
+  so portrait uploads (Shorts) display tall instead of being squeezed into a
+  fixed 16:9 strip. Rotating the device to landscape expands the video to
+  fill the screen; rotating back to portrait returns to the normal layout
+  with title/like/skip below the video.
 - **API key** — stored in the device Keychain via Settings, not committed to
   git, not bundled in the app.
 

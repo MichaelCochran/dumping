@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 enum YouTubeAPIError: LocalizedError {
@@ -62,6 +63,34 @@ actor YouTubeAPIService {
         } while pageToken != nil && pagesFetched < maxUploadPages
 
         return videos
+    }
+
+    /// The video's true aspect ratio (width / height), so portrait uploads
+    /// (e.g. Shorts) aren't squeezed into a fixed 16:9 box. Falls back to
+    /// standard 16:9 on any failure — never throws, since this is only used
+    /// to size a view.
+    func fetchAspectRatio(videoId: String) async -> CGFloat {
+        let standardRatio: CGFloat = 16.0 / 9.0
+        guard let key = APIKeyStore.load(), !key.isEmpty else { return standardRatio }
+
+        var components = URLComponents(url: baseURL.appendingPathComponent("videos"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [
+            URLQueryItem(name: "part", value: "player"),
+            URLQueryItem(name: "id", value: videoId),
+            // Requesting maxHeight guarantees embedWidth/embedHeight come back
+            // scaled to the video's actual aspect ratio.
+            URLQueryItem(name: "maxHeight", value: "9999"),
+            URLQueryItem(name: "key", value: key)
+        ]
+        guard let url = components.url,
+              let response: VideoPlayerResponse = try? await fetch(url),
+              let player = response.items?.first?.player,
+              let width = player.embedWidth,
+              let height = player.embedHeight,
+              width > 0, height > 0 else {
+            return standardRatio
+        }
+        return CGFloat(width) / CGFloat(height)
     }
 
     // MARK: - Channel resolution
@@ -226,4 +255,15 @@ private struct PlaylistItemsResponse: Decodable {
     }
     let items: [Item]?
     let nextPageToken: String?
+}
+
+private struct VideoPlayerResponse: Decodable {
+    struct Player: Decodable {
+        let embedWidth: Int?
+        let embedHeight: Int?
+    }
+    struct Item: Decodable {
+        let player: Player
+    }
+    let items: [Item]?
 }

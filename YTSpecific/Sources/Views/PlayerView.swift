@@ -8,6 +8,7 @@ struct PlayerView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Query private var likedRecords: [LikedVideoRecord]
+    @State private var aspectRatio: CGFloat = 16.0 / 9.0
 
     var body: some View {
         GeometryReader { geometry in
@@ -30,10 +31,15 @@ struct PlayerView: View {
                         }
                     }
                 } else if let video = queueManager.currentVideo {
-                    if isLandscape {
-                        landscapePlayer(video: video)
-                    } else {
-                        portraitPlayer(video: video)
+                    Group {
+                        if isLandscape {
+                            landscapePlayer(video: video)
+                        } else {
+                            portraitPlayer(video: video, availableHeight: geometry.size.height)
+                        }
+                    }
+                    .task(id: video.id) {
+                        aspectRatio = await YouTubeAPIService.shared.fetchAspectRatio(videoId: video.id)
                     }
                 } else if queueManager.isExhausted {
                     centered {
@@ -72,15 +78,17 @@ struct PlayerView: View {
     }
 
     @ViewBuilder
-    private func portraitPlayer(video: YouTubeVideo) -> some View {
+    private func portraitPlayer(video: YouTubeVideo, availableHeight: CGFloat) -> some View {
         VStack(spacing: 0) {
             YouTubePlayerWebView(
                 videoId: video.id,
                 onEnded: { queueManager.advance() },
                 onError: { queueManager.advance() }
             )
-            .aspectRatio(16.0 / 9.0, contentMode: .fit)
-            .frame(maxWidth: .infinity)
+            .aspectRatio(aspectRatio, contentMode: .fit)
+            // Cap how tall a portrait video (e.g. a Short) can grow so it
+            // never crowds out the title/like/skip row below it.
+            .frame(maxWidth: .infinity, maxHeight: availableHeight * 0.65)
             .background(Color.black)
 
             ScrollView {
