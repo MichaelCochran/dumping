@@ -50,7 +50,7 @@ struct YouTubePlayerWebView: UIViewRepresentable {
         // Swift name the ObjC importer would have generated for these
         // @optional protocol methods.
         @objc(playerView:didChangeToState:)
-        func playerView(_ playerView: YTPlayerView, didChangeToState state: YTPlayerState) {
+        func playerView(_ playerView: YTPlayerView, didChangeTo state: YTPlayerState) {
             // kYTPlayerStateEnded == 1
             if state.rawValue == 1 {
                 onEnded()
