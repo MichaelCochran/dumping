@@ -20,6 +20,11 @@ struct LikedVideosView: View {
                                 Text(record.channelTitle)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+                                if let publishedAt = record.publishedAt {
+                                    Text("Uploaded \(publishedAt.formatted(date: .abbreviated, time: .omitted))")
+                                        .font(.caption2)
+                                        .foregroundStyle(.tertiary)
+                                }
                             }
                         }
                         .onDelete(perform: unlike)

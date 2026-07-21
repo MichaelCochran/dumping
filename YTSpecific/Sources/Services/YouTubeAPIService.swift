@@ -51,18 +51,62 @@ actor YouTubeAPIService {
     }
 
     func fetchAllUploads(for channel: YouTubeChannel) async throws -> [YouTubeVideo] {
+        try await fetchAllVideos(inPlaylist: channel.uploadsPlaylistId, channelId: channel.id)
+    }
+
+    /// Enumerates every video in an arbitrary playlist (the channel's uploads
+    /// playlist, or any playlist the channel has published).
+    func fetchAllVideos(inPlaylist playlistId: String, channelId: String) async throws -> [YouTubeVideo] {
         var videos: [YouTubeVideo] = []
         var pageToken: String?
         var pagesFetched = 0
 
         repeat {
-            let (items, nextToken) = try await fetchUploadsPage(playlistId: channel.uploadsPlaylistId, pageToken: pageToken, channelId: channel.id)
+            let (items, nextToken) = try await fetchPlaylistItemsPage(playlistId: playlistId, pageToken: pageToken, channelId: channelId)
             videos.append(contentsOf: items)
             pageToken = nextToken
             pagesFetched += 1
         } while pageToken != nil && pagesFetched < maxUploadPages
 
         return videos
+    }
+
+    /// Every public playlist the channel has published (not including the
+    /// implicit "uploads" playlist).
+    func fetchPlaylists(channelId: String) async throws -> [YouTubePlaylist] {
+        var playlists: [YouTubePlaylist] = []
+        var pageToken: String?
+        var pagesFetched = 0
+        let maxPlaylistPages = 5 // caps at ~250 playlists
+
+        repeat {
+            var components = URLComponents(url: baseURL.appendingPathComponent("playlists"), resolvingAgainstBaseURL: false)!
+            var queryItems = [
+                URLQueryItem(name: "part", value: "snippet,contentDetails"),
+                URLQueryItem(name: "channelId", value: channelId),
+                URLQueryItem(name: "maxResults", value: "50"),
+                URLQueryItem(name: "key", value: try apiKey)
+            ]
+            if let pageToken {
+                queryItems.append(URLQueryItem(name: "pageToken", value: pageToken))
+            }
+            components.queryItems = queryItems
+
+            let response: PlaylistsListResponse = try await fetch(components.url!)
+            let pageItems: [YouTubePlaylist] = (response.items ?? []).map { item in
+                YouTubePlaylist(
+                    id: item.id,
+                    title: item.snippet.title,
+                    thumbnailURLString: item.snippet.thumbnails.medium?.url ?? item.snippet.thumbnails.defaultThumbnail?.url,
+                    itemCount: item.contentDetails?.itemCount
+                )
+            }
+            playlists.append(contentsOf: pageItems)
+            pageToken = response.nextPageToken
+            pagesFetched += 1
+        } while pageToken != nil && pagesFetched < maxPlaylistPages
+
+        return playlists
     }
 
     /// The video's true aspect ratio (width / height), so portrait uploads
@@ -141,9 +185,9 @@ actor YouTubeAPIService {
         )
     }
 
-    // MARK: - Uploads
+    // MARK: - Playlist videos
 
-    private func fetchUploadsPage(playlistId: String, pageToken: String?, channelId: String) async throws -> ([YouTubeVideo], String?) {
+    private func fetchPlaylistItemsPage(playlistId: String, pageToken: String?, channelId: String) async throws -> ([YouTubeVideo], String?) {
         var components = URLComponents(url: baseURL.appendingPathComponent("playlistItems"), resolvingAgainstBaseURL: false)!
         var queryItems = [
             URLQueryItem(name: "part", value: "snippet,contentDetails"),
@@ -252,6 +296,20 @@ private struct PlaylistItemsResponse: Decodable {
     struct Item: Decodable {
         let snippet: Snippet
         let contentDetails: PlaylistItemContentDetails?
+    }
+    let items: [Item]?
+    let nextPageToken: String?
+}
+
+private struct PlaylistContentDetails: Decodable {
+    let itemCount: Int?
+}
+
+private struct PlaylistsListResponse: Decodable {
+    struct Item: Decodable {
+        let id: String
+        let snippet: Snippet
+        let contentDetails: PlaylistContentDetails?
     }
     let items: [Item]?
     let nextPageToken: String?

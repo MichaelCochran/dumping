@@ -37,11 +37,15 @@ struct ChannelSearchView: View {
                     ProgressView()
                 }
                 if let errorMessage {
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                    VStack(spacing: 8) {
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                        Button("Retry", action: search)
+                            .buttonStyle(.bordered)
+                    }
                 }
             }
             .padding(.top, 24)

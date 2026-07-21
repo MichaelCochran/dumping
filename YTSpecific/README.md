@@ -19,18 +19,29 @@ to YouTube.
   iOS; the app just decides *which* video ID loads next and auto-advances
   when a video ends. Pulled in via Swift Package Manager — Xcode downloads it
   automatically the first time you open/build the project (needs internet).
-- **Queue** — built from the channel's full uploads list, filtered to exclude
-  anything in your local watch history, ordered newest-first / oldest-first /
-  shuffled (configurable in Settings). When the filtered queue is empty, the
-  app tells you you're caught up instead of silently stopping.
+- **Queue** — built from the channel's full uploads list (or a single
+  playlist — see below), filtered to exclude anything in your local watch
+  history, ordered newest-first / oldest-first / shuffled (configurable in
+  Settings). When the filtered queue is empty, the app tells you you're
+  caught up instead of silently stopping.
+- **Playlists** — the "•••" menu's **Playlists** entry (shown while a channel
+  is active) lists that channel's public playlists; picking one plays just
+  that playlist instead of the full uploads feed, and "All Uploads" switches
+  back.
 - **History & Likes** — stored locally with SwiftData. Liking a video never
   makes a network call; it's purely a local record you can review or remove.
+  Both show the video's original upload date alongside when you watched/liked
+  it.
 - **Orientation & sizing** — each video's real aspect ratio is fetched from
   the Data API (`videos.list?part=player`) and used to size the player box,
   so portrait uploads (Shorts) display tall instead of being squeezed into a
   fixed 16:9 strip. Rotating the device to landscape expands the video to
   fill the screen; rotating back to portrait returns to the normal layout
-  with title/like/skip below the video.
+  with title/like/skip below the video — the player view stays the same
+  instance across the rotation, so playback position isn't lost.
+- **Retry** — if a channel, playlist, or search lookup fails (e.g. a
+  connection hiccup), a Retry button re-runs the same request instead of
+  leaving you stuck.
 - **API key** — stored in the device Keychain via Settings, not committed to
   git, not bundled in the app.
 
@@ -75,10 +86,10 @@ YTSpecific/
   project.yml                  # xcodegen spec (generates the .xcodeproj)
   Sources/
     YTSpecificApp.swift
-    Models/                    # YouTubeChannel, YouTubeVideo, PlaybackOrder
+    Models/                    # YouTubeChannel, YouTubeVideo, YouTubePlaylist, PlaybackOrder
     Persistence/                # SwiftData models: WatchedVideoRecord, LikedVideoRecord
     Services/                  # YouTubeAPIService, PlaybackQueueManager, APIKeyStore, RecentChannelStore, ChannelHistoryStore
-    Views/                     # ContentView, ChannelSearchView, PlayerView, YouTubePlayerWebView, HistoryView, LikedVideosView, SettingsView
+    Views/                     # ContentView, ChannelSearchView, PlayerView, PlaylistsView, YouTubePlayerWebView, HistoryView, LikedVideosView, SettingsView
   Resources/
     Assets.xcassets
 ```

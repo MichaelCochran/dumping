@@ -17,7 +17,7 @@ struct PlayerView: View {
             Group {
                 if queueManager.isLoading {
                     centered {
-                        ProgressView("Loading \(channel.title)...")
+                        ProgressView("Loading \(queueManager.activeSourceTitle ?? channel.title)...")
                     }
                 } else if let errorMessage = queueManager.errorMessage {
                     centered {
@@ -28,14 +28,41 @@ struct PlayerView: View {
                             Text(errorMessage)
                                 .multilineTextAlignment(.center)
                                 .padding(.horizontal)
+                            Button("Retry") {
+                                Task { await queueManager.retry() }
+                            }
+                            .buttonStyle(.borderedProminent)
                         }
                     }
                 } else if let video = queueManager.currentVideo {
-                    Group {
-                        if isLandscape {
-                            landscapePlayer(video: video)
-                        } else {
-                            portraitPlayer(video: video, availableHeight: geometry.size.height)
+                    // IMPORTANT: the player itself stays in the same position
+                    // in this VStack regardless of orientation — only its
+                    // frame/modifiers change. Wrapping it in an if/landscape
+                    // else/portrait branch (two structurally different view
+                    // trees) made SwiftUI tear down and recreate the whole
+                    // WKWebView on rotation, resetting playback to the start.
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(queueManager.activeSourceTitle ?? channel.title)
+                            .font(isLandscape ? .caption : .headline)
+                            .lineLimit(2)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                            .padding(.top, isLandscape ? 4 : 8)
+
+                        YouTubePlayerWebView(
+                            videoId: video.id,
+                            onEnded: { queueManager.advance() },
+                            onError: { queueManager.advance() }
+                        )
+                        .aspectRatio(aspectRatio, contentMode: .fit)
+                        .frame(maxWidth: .infinity, maxHeight: isLandscape ? .infinity : geometry.size.height * 0.6)
+                        .background(Color.black)
+
+                        if !isLandscape {
+                            ScrollView {
+                                videoDetails(video: video)
+                                    .padding()
+                            }
                         }
                     }
                     .task(id: video.id) {
@@ -49,7 +76,7 @@ struct PlayerView: View {
                                 .foregroundStyle(.green)
                             Text("You're all caught up")
                                 .font(.headline)
-                            Text("You've watched every \(channel.title) video currently available. Check back later for new uploads.")
+                            Text("You've watched everything currently available in \(queueManager.activeSourceTitle ?? channel.title). Check back later for new uploads.")
                                 .multilineTextAlignment(.center)
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal)
@@ -59,7 +86,7 @@ struct PlayerView: View {
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .navigationTitle(channel.title)
+        .navigationTitle("YTSpecific")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -78,55 +105,12 @@ struct PlayerView: View {
     }
 
     @ViewBuilder
-    private func portraitPlayer(video: YouTubeVideo, availableHeight: CGFloat) -> some View {
-        VStack(spacing: 0) {
-            YouTubePlayerWebView(
-                videoId: video.id,
-                onEnded: { queueManager.advance() },
-                onError: { queueManager.advance() }
-            )
-            .aspectRatio(aspectRatio, contentMode: .fit)
-            // Cap how tall a portrait video (e.g. a Short) can grow so it
-            // never crowds out the title/like/skip row below it.
-            .frame(maxWidth: .infinity, maxHeight: availableHeight * 0.65)
-            .background(Color.black)
-
-            ScrollView {
-                videoDetails(video: video)
-                    .padding()
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func landscapePlayer(video: YouTubeVideo) -> some View {
-        // In landscape the video fills the whole available space (YouTube's
-        // own player letterboxes to the right aspect ratio internally); a
-        // translucent bar keeps title/like/skip reachable without shrinking
-        // the video.
-        ZStack(alignment: .bottom) {
-            YouTubePlayerWebView(
-                videoId: video.id,
-                onEnded: { queueManager.advance() },
-                onError: { queueManager.advance() }
-            )
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.black)
-
-            videoDetails(video: video)
-                .padding(.horizontal)
-                .padding(.vertical, 10)
-                .background(.ultraThinMaterial)
-        }
-    }
-
-    @ViewBuilder
     private func videoDetails(video: YouTubeVideo) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(video.title)
                 .font(.headline)
-                .lineLimit(2)
-            Text(channel.title)
+                .lineLimit(3)
+            Text("Uploaded \(video.publishedAt.formatted(date: .abbreviated, time: .omitted))")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -161,7 +145,8 @@ struct PlayerView: View {
                 channelId: video.channelId,
                 channelTitle: channel.title,
                 title: video.title,
-                thumbnailURLString: video.thumbnailURLString
+                thumbnailURLString: video.thumbnailURLString,
+                publishedAt: video.publishedAt
             )
             modelContext.insert(record)
         }

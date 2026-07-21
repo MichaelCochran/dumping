@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var showingHistory = false
     @State private var showingLiked = false
     @State private var showingSettings = false
+    @State private var showingPlaylists = false
 
     private var playbackOrder: PlaybackOrder {
         PlaybackOrder(rawValue: playbackOrderRaw) ?? .newestFirst
@@ -18,10 +19,14 @@ struct ContentView: View {
         NavigationStack {
             Group {
                 if let channel {
-                    PlayerView(channel: channel, queueManager: queueManager, onChangeChannel: {
-                        self.channel = nil
-                        RecentChannelStore.clear()
-                    })
+                    PlayerView(
+                        channel: channel,
+                        queueManager: queueManager,
+                        onChangeChannel: {
+                            self.channel = nil
+                            RecentChannelStore.clear()
+                        }
+                    )
                 } else {
                     ChannelSearchView { selected in
                         selectChannel(selected)
@@ -31,6 +36,13 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
+                        if channel != nil {
+                            Button {
+                                showingPlaylists = true
+                            } label: {
+                                Label("Playlists", systemImage: "list.bullet")
+                            }
+                        }
                         Button {
                             showingHistory = true
                         } label: {
@@ -58,6 +70,13 @@ struct ContentView: View {
                     queueManager.rebuildQueue(order: playbackOrder)
                 })
             }
+            .sheet(isPresented: $showingPlaylists) {
+                if let channel {
+                    PlaylistsView(channel: channel) { selectedPlaylist in
+                        selectPlaylist(selectedPlaylist, channel: channel)
+                    }
+                }
+            }
         }
         .onAppear {
             queueManager.configure(modelContext: modelContext)
@@ -74,6 +93,17 @@ struct ContentView: View {
         Task {
             queueManager.configure(modelContext: modelContext)
             await queueManager.loadChannel(selected, order: playbackOrder)
+        }
+    }
+
+    private func selectPlaylist(_ playlist: YouTubePlaylist?, channel: YouTubeChannel) {
+        Task {
+            queueManager.configure(modelContext: modelContext)
+            if let playlist {
+                await queueManager.loadPlaylist(playlist, channel: channel, order: playbackOrder)
+            } else {
+                await queueManager.loadChannel(channel, order: playbackOrder)
+            }
         }
     }
 }

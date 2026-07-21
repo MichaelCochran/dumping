@@ -15,9 +15,14 @@ struct HistoryView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(record.title)
                                 .font(.subheadline)
-                            Text("\(record.channelTitle) \u{00B7} \(record.watchedAt.formatted(date: .abbreviated, time: .shortened))")
+                            Text("\(record.channelTitle) \u{00B7} watched \(record.watchedAt.formatted(date: .abbreviated, time: .shortened))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            if let publishedAt = record.publishedAt {
+                                Text("Uploaded \(publishedAt.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
                     }
                 }
