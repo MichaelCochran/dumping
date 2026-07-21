@@ -1,0 +1,511 @@
+﻿# Check-in Questions
+
+## Daily Check-in Questions
+
+- What is the biggest change since yesterday?
+- What is the priority for today?
+- What is your goal for today?
+- How can the team help you achieve your goals?
+- What are you most looking forward to today?
+- What are you most dreading today?
+- How are you feeling today?
+- How has the day been so far?
+- How are you going to focus today?
+- What are you going to do today to take care of yourself?
+- What is your intention for the day?
+- What can the manager do to help you today?
+- What resources or tools will you need today?
+- What is your most pressing question of the day?
+- What is the challenge of the day?
+- What obstacles do you foresee for the day?
+- What are three skills you can practice today?
+- Who can you help today?
+- Who can help you today?
+- What is one kind deed you can do today for a coworker?
+- What would brighten your day today?
+- What do you plan to accomplish today?
+- How will you end today better than you started?
+- What are you most looking forward to this week?
+- How do you feel today on a scale of 1 to 5, where 5 is awesome?
+- What are you most excited to work on at the moment?
+- Has anything been proving particularly challenging recently?
+- What are the three most important things on your to-do list?
+- What are three things you're grateful for this week?
+- What's one thing you could do to end today better than it started?
+- What obstacles, if any, can you identify in your calendar?
+- Is there anything that would help you have a good day today?
+- What are three skills you're going to focus on today?
+- What kind of deed will you do for a colleague today?
+- Are you dreading anything today? If so, what? And can we do anything to help?
+- What's something you'd like to see more of from your colleagues?
+- What accomplishment from yesterday are you most proud of?
+- What's one thing you learned yesterday that you can apply today?
+- What progress have you made since yesterday's meeting?
+- What was the highlight of yesterday? And why?
+- Have you learned anything over the last few days that you'd like to share?
+- What's one thing you've recently discovered that you're excited about?
+- What's one challenge that you overcame yesterday?
+- How did you feel about coming to work today?
+- Is there anything you'd like to celebrate this week?
+- What's the most urgent thing on your to-do list for today?
+- If you were to receive some constructive feedback today, what would you expect it to be?
+- What's one thing you like about work and one thing you think could be improved?
+- If you had to express your current work capacity (i.e., how much work you currently have to do) as a percentage, what would it be?
+- What two changes would you like to make to the office and why?
+
+## Emotional Check-in Questions for Adults
+
+- How are you feeling about your job overall?
+- How confident are you in your ability to do your job?
+- What is your main concern at the moment?
+- What are you feeling anxious about?
+- What idea is overwhelming you?
+- What is confusing you?
+- What is exciting you?
+- What challenges are frustrating you?
+- What frustrates you?
+- What is causing you doubt?
+- What is making you hesitate?
+- What are you most grateful for?
+- What inspires you?
+- What makes you hopeful?
+- What is something that made you proud lately?
+- What brings you the most joy at work?
+- What is your biggest obstacle?
+- What time of the day are you most alert?
+- What time of the day are you least alert?
+- How supported do you feel in managing work-life balance?
+- On a scale of 1 to 10, how satisfied are you with your job?
+- On a scale of 1 to 10, how valued do you feel at work?
+- On a scale of 1 to 10, how supported do you feel at work?
+- On a scale of 1 to 10, how well do you feel you fit in with and get along with your colleagues?
+- On a scale of 1 to 10, how respected do you feel?
+- Do you feel challenged enough at work?
+- Do you feel that you have room to grow in this position?
+- How often do you feel lonely when working from home?
+- When, if ever, do you feel ignored at work?
+- How are you feeling about your workload lately?
+- What's been the highlight of your week?
+- On a scale of 1-10, how energized do you feel at work?
+- What aspects of your job bring you the most satisfaction?
+- Is there anything causing you stress that we should address?
+- How well do you feel your skills are being utilized?
+- What would make your work more enjoyable?
+- How supported do you feel by the team?
+- What's one thing that would improve your work experience?
+- How is your work-life balance feeling these days?
+- How motivated and engaged do you feel at work?
+- What's one task that's draining your energy right now?
+- Do you feel like your workload is manageable?
+- What's taking up most of your time this week?
+- Is there anything affecting your energy or focus lately?
+- Are you able to disconnect after work hours?
+- Do you feel appreciated at work?
+- When was the last time you felt proud of your work?
+- Are you feeling motivated lately?
+- What's causing the most stress for you right now?
+- Do you feel like you're maintaining a healthy work-life balance?
+- Are there any small wins or joys you'd like to share?
+- What's something that's been weighing on your mind?
+
+## Fun Check-in Questions
+
+- Pretend you have a time machine. What does future you come back to advise you about?
+- Pretend you just gave me a truth serum. What is the first question you ask?
+- If you could try anything without any consequences, what would you try?
+- What is the most fun you have had at work recently?
+- Describe your dream team building outing.
+- If we were on one of those secret boss-goes-undercover reality shows, what do you think would be the highlights this week?
+- What is the most random thought you had at work this week?
+- Share a joke you think your teammates might find funny.
+- Share a fascinating fact you think might interest your coworkers.
+- On a scale of one to YouTube cat videos, how productive were you at work this week?
+- What is one random statistic you would like to learn about this company?
+- What is one random fact you would like to learn about your coworkers?
+- If you were suddenly promoted to CEO of the company for one day, what would be the first change you would make?
+- If you could go undercover as any other employee for a day, who would you choose and why?
+- If you could learn any secret, what would it be and why?
+- What are three things you loved about where you grew up?
+- What law would you be most excited to break?
+- What's one thing the team might be surprised to know about you?
+- What's your love language?
+- Who is your favorite influencer, and why?
+- What was your favorite song as a teenager? What's your favorite song now?
+- If you could live in any country for the next year, where would it be and why?
+- What's the best and worst thing you've ever eaten?
+- You can ask for tickets to any event in the world. What would it be and why?
+- What's your favorite thing to eat for lunch?
+- What's the worst part of growing up?
+- What are the three best books you've ever read?
+- What movie are you most embarrassed about liking?
+- If you could get the phone number of any celebrity, who would it be and why?
+- What are three things you couldn't go a week without?
+- You win $1 million in the lottery. What are the first three things you buy/do?
+- What's your favorite item and/or activity to splurge on?
+- What does the perfect Sunday look like?
+- What superpower is overrated? What superpower would you choose?
+- What background do you have on your mobile or personal computer?
+- What 3 things would you take to a desert island?
+- Which sense (touch, taste, sight, hearing, smell) do you most value and why?
+- You're stuck at an airport for 10 hours with no Wi-Fi. How do you pass the time?
+- Have you ever had a business idea? If so, what is it?
+- What's one hobby you've never tried but would love to start?
+- What's the farthest you've ever traveled?
+- Would you rather visit 200 years in the past or 200 years in the future? Why?
+- What's one thing people wrongly assume about you when you first meet?
+- What's been the highlight of your day/week/month/year so far?
+- What's your biggest fear?
+- In your opinion, what's the best job in the world?
+- There's a natural disaster, and you've got 60 seconds to evacuate your home. What three items do you take with you and why?
+- What are three things you'd wake up early for?
+- What do you think is your best character trait?
+- If the last meeting of the day got canceled and you could leave work early, how would you spend the time?
+- Who's the teacher you'll never forget? What did they do that made such an impression on you as a child?
+- What was the first thing you bought with your very first paycheck?
+- What's a question that you hate being asked?
+- Look at the person to your left. What's one thing you like about them?
+
+## Mindset Check-in Questions
+
+- How would you describe your current mindset?
+- What times of the day do you feel foggiest?
+- What times of the day do you feel most clear?
+- What tasks are you most comfortable performing?
+- What tasks take you outside of your comfort zone?
+- What tasks are you struggling with?
+- What tasks are you excelling at?
+- What are you feeling most positive about?
+- What are you feeling hesitant about?
+- What is your standard approach to new challenges?
+- How many hours a day are you fully focused?
+- When do you achieve the best workflow?
+- Talk me through a pretend problem.
+- What tools might help you focus better?
+- What is your biggest or most common distraction?
+- What times of day do you feel best and worst?
+- How in-sync do you feel with your teammates?
+- What actions might help you better align with the team?
+- How close do you feel to coworkers?
+- How supported do you feel by your team?
+- How supported do you feel by your managers?
+- How much bandwidth do you have to take on new projects or responsibilities?
+- How fulfilled do you feel in your current position? What might boost those feelings of fulfillment?
+- What topic do you feel confident in giving an impromptu presentation on?
+- How are you feeling about your current career trajectory?
+- What can we do to help you achieve your professional goals?
+- On a scale of 1 to 10, how likely are you to meet your deadlines?
+- On a scale of 1 to 10, how likely are you to meet your metrics?
+- What are your favorite parts of your job?
+- What are your favorite aspects of the company?
+- How do you feel about your team?
+- How do you feel about your relationship with your manager?
+- What could be improved about your role?
+- How do you feel about your performance and contributions to the team?
+- How fulfilled do you feel by your current role? What responsibilities or changes would make a positive difference?
+- How do you feel about how much autonomy you have in your current role?
+
+## Check-in Questions for Employees
+
+- What have you been working on?
+- What excites you most about work lately?
+- What has been taking up the majority of your time lately?
+- What is a task you have been procrastinating that you can get done within the next day or two?
+- What have you learned since our last check-in?
+- What steps have you taken to improve since our last check-in?
+- What is your greatest challenge at the moment?
+- What does your daily routine look like?
+- What do you hope to be doing in one months time? Three months? One year? Do you believe you are on track to meet these expectations?
+- Given your work so far this quarter, what are you proudest of?
+- Which teammate do you communicate with most often?
+- Who is a teammate you would like to work with more?
+- What tools might help you do your job better?
+- What are three interesting ideas you've had lately?
+- What word best describes work lately?
+- If someone were to give you an award right now, what would it be?
+- If you received constructive criticism right now, what do you expect it would be?
+- If you had a time machine, what would you change about this past week/month/quarter?
+- If you were suddenly the president of a company, what is a change you would implement immediately?
+- What is a goal or self-improvement plan you have set?
+- How do you plan to push yourself outside of your comfort zone?
+- What is one thing you learned recently?
+- What do you want to learn next?
+- What progress have you made on your key priorities this week?
+- Which goal are you most excited about right now?
+- What's one accomplishment from this week that you're proud of?
+- Where do you feel you're exceeding expectations?
+- What obstacles are preventing you from reaching your goals?
+- How can I help you overcome your current challenges?
+- What resources would help you perform at your best?
+- Which of your tasks energizes you the most?
+- What would you like to focus on improving next quarter?
+- How do you measure success in your current projects?
+- Are you clear on your top priorities?
+- Is there anything I can take off your plate?
+- What's one thing slowing you down lately?
+- Are deadlines realistic for your current projects?
+- What's your biggest win this week?
+- What's one task you've been avoiding, and why?
+- Are you getting enough uninterrupted focus time?
+- Do you understand how your work connects to the company's goals?
+- Are there any recent decisions you wish were explained better?
+- What's something unclear about your role right now?
+- Are you confident in what's expected of you this week/month?
+- Do you feel like you have a clear direction for your projects?
+- Is there anything we're doing that feels like busywork?
+- What are you most excited about in your current projects?
+- If you could rewrite your job description, what would change?
+- Do you know what success looks like for you right now?
+
+## Development and Growth Questions
+
+- What new skills would you like to develop?
+- Where do you see yourself growing in the next six months?
+- What type of projects interest you most?
+- How can I better support your professional development?
+- What feedback would help you improve?
+- Who in the organization would you like to learn from?
+- What training or learning opportunities interest you?
+- How do you prefer to receive feedback?
+- What career goals are you working toward?
+- What would stretch you in a positive way?
+- Are you learning something new in your role right now?
+- What's one skill you'd love to build?
+- Is your current role challenging you enough?
+- Do you have a career goal you'd like support with?
+- Have you had access to training or development opportunities lately?
+- What's one area you feel stuck in?
+- What part of your job do you want to master next?
+- Is there a mentor or leader you'd love to learn from?
+- How can I better support your professional growth?
+- What feedback would help you grow this week?
+- Where do you see yourself in a year?
+- What part of your work feels most meaningful to you?
+- Are we helping you move closer to your career goals?
+- What's your dream project or role?
+- What kind of work energizes you most?
+- What are your long-term professional aspirations?
+- How do you want to grow in the next 6 months?
+- Is there a skill or tool you've wanted to learn but haven't had time for?
+- What would make your job more fulfilling?
+- Do you see a future for yourself here?
+
+## Check-in Questions for Teams
+
+- What do you think the team should be discussing more?
+- What is everyone's current workload like?
+- What do you think is the biggest time drain lately? How can we fix it?
+- How can we redistribute responsibilities to be more efficient?
+- What do you need help with?
+- What is a task that takes ten minutes to complete and has big results?
+- What is one thing we can do to improve our communication?
+- What is one example of good communication this week?
+- What is one example of less-than-perfect communication this week?
+- What is one example of excellent teamwork from this week?
+- What is a missed opportunity for teamwork?
+- How does our team compare to other teams in the company?
+- What is a discussion point that has not yet come up in conversation?
+- Where are the biggest bottlenecks or delays taking place?
+- What tasks are getting done the fastest?
+- What systems, techniques, or methods might we be able to use more often?
+- Are there any tasks that keep getting put on the back burner? Which ones? Why the delay?
+- Do you feel like you can approach any member of the team?
+- How can we be better about offering assistance?
+- What is one strength you can share with the rest of your teammates?
+- What team building activities do you want to do as a group?
+- Where does the most confusion or miscommunication seem to occur?
+- What are the current roles within the team?
+- Which team member's work is most pivotal at this current moment?
+- What could we do to better prepare in case of unexpected interruptions, for example, a team member falling ill?
+- What is one question you are glad a teammate asked, because you were wondering the same thing?
+- Share a moment when you thought "I'm so glad this colleague is on my team."
+- Which task took more time than expected?
+- Which task took less time than expected?
+- How can we get ready to welcome a new teammate to the group?
+- How can we better show appreciation for each other?
+- What is a non-work detail you would like to learn about your colleagues?
+- Who helped you recently?
+- Who did you help recently?
+- How well is the team collaborating on current projects?
+- Who has been particularly helpful to you lately?
+- What team processes are working well?
+- Where do you see opportunities for better teamwork?
+- How effective are our team meetings?
+- What communication challenges have you noticed?
+- How can we improve our team dynamics?
+- Who would you like to collaborate with more?
+- What team traditions or practices do you value most?
+- How well do you understand everyone's roles?
+- How supported do you feel by your teammates?
+- Is there anyone you'd like to collaborate with more?
+- Have there been any conflicts or tensions on the team recently?
+- What's one way our team could communicate better?
+- Who made your job easier this week?
+- Do you feel comfortable asking your peers for help?
+- Are team meetings useful and engaging?
+- How well do you think we're aligned as a team?
+- Do you feel recognized by your peers?
+- What's one small win the team should celebrate this week?
+- From 1 to 10, where 10 is faultless, how well do you think we're performing as a unit right now? What could we do to improve?
+- What changes can we make to boost productivity?
+- What tools could we provide to help you succeed in the workplace?
+- How can we ensure everyone feels included and valued within the team?
+- Who's feeling overworked at the moment? Are there any opportunities you can see to redistribute responsibilities?
+- What's the biggest obstacle we face as a team in terms of communication?
+- How does our team compare to other teams you've worked in?
+- How can we work together to improve efficiency?
+- What word would you use to describe the current team dynamic?
+- What are three ways we could become a more integrated team?
+- What's one example of effective teamwork you can give from this/last week?
+- What's one thing we could do to improve the team dynamic?
+- What's one thing we could do to improve collaboration?
+- What are three steps we can take to make the workplace more enjoyable?
+- What's your favorite part of working in this team?
+- What are three positive aspects of our company culture?
+- What are three negatives aspects of our company culture?
+- What changes would you like to see in the office?
+- What sort of team-building retreat would you like to go on together?
+- Do you feel like part of the team? What could we do to make you feel more included?
+- What Hollywood movie do you think best portrays our team?
+- What song best portrays life in the office?
+- What are the biggest bottlenecks in our current workflow?
+- What is our biggest strength as a team right now?
+- What is our biggest weakness as a team right now?
+- Where does miscommunication occur most often?
+- Which team member deserves a prize right now, and why?
+- How can we beat our main competitor?
+- What tasks are hardest to complete? Why?
+- What team events would you most enjoy doing?
+- Is there any extra training you think would benefit the team?
+- What communication games and activities do you most like to play?
+- What tasks take more time than expected on an average day?
+- How can we better show our appreciation for our teammates?
+- How would you describe the team in three words?
+- What can we do to empower you as a team?
+- What opportunities for career development would you like?
+- If a new team member was about to join, what advice would you give to help them succeed?
+- Do you ever feel isolated from your teammates? If so, what changes could we make to stop that from happening?
+- Do you feel like part of the team? If not, how can we make you feel more included?
+- Are we doing enough to facilitate team unity and cohesion? If not, what else would you like us to do?
+
+## Feedback and Improvement Questions
+
+- What's one thing our team should start doing?
+- What should we stop doing that isn't adding value?
+- How can I be a better manager for you?
+- What feedback do you have about our current processes?
+- What would you change about how we work together?
+- How clear are the expectations for your role?
+- What company policies or practices frustrate you?
+- How can we make our meetings more effective?
+- What would help you feel more connected to the company mission?
+- If you were in my position, what would you focus on?
+- What's one thing I can do better as your manager?
+- Do you feel comfortable giving feedback to leadership?
+- What's one company policy you wish we'd revisit?
+- Is there something you've wanted to say but haven't felt comfortable bringing up?
+- Do you feel like your voice is heard in team decisions?
+- Do you have the tools and resources you need to communicate effectively?
+- Are there any communication habits we could improve?
+
+
+## Project-Related Check-in Questions
+
+- What are the biggest wins of this project so far?
+- What obstacles do you foresee with this project?
+- What excites you most about this project?
+- Do you have any concerns with this project? If so, what are they?
+- How likely is it that we'll hit our targets for this project?
+- In your opinion, what is working as expected? What isn't?
+- Have there been any changes to the project timeline or deliverables?
+- How do you think we should celebrate and recognize team members for their contributions throughout this project?
+- What are the top priorities for this project in the upcoming week?
+- Have you received any feedback from stakeholders? If so, what did they say?
+- Is there any additional information or tools we can give you to help this project move forward?
+- Do you feel like you have enough support to succeed with this project?
+- Have you spotted any potential roadblocks that could derail or delay the project?
+- Do the project's goals seem achievable? If not, what could we do to make them feel more attainable?
+- What metrics or KPIs are we using to measure the project's success?
+- How can we keep everyone motivated with this project throughout its duration?
+- Have you spotted any new trends in the industry that could impact the project?
+- How is the team's morale at the moment? What can we do to improve it?
+- How can we ensure the project meets relevant sustainability or corporate social responsibility goals?
+- How can we ensure the project meets relevant diversity, equity, and inclusion goals?
+- Do you feel adequately trained and supported to meet the demands of this project?
+- How much bandwidth do you have to take on additional projects right now?
+- What's the plan to execute this project effectively?
+- How will you gauge the overall success of the project over time?
+- What is the best part of this project?
+- What is the worst or hardest part of this project?
+- Is there anything in this project you think we should stop doing? What should we continue doing?
+- How does this project align with the company's overarching goals?
+- Do the project's current goals seem achievable or overly ambitious? What could we do to bring them within reach?
+- Imagine the project is already over. What would you have done differently?
+- What makes you feel proudest about this project?
+- What's the likelihood this project will fail?
+- Is the workload for this project manageable? If not, what needs to change?
+- What project are you most confident in and why?
+- What could the project manager do to help you execute the project successfully?
+- Are we on, ahead, or behind schedule? What could we do to speed things up?
+- What's the main reason you can imagine this project will fail? What safeguards can we put in place to stop that from happening?
+- Are there any conflicts of interest you can identify with this project?
+- Can you spot any opportunities to expand or pivot the project's scope?
+- Now the project's over, what's the biggest thing you've learned?
+
+## Check-in Questions for Challenging Times
+
+- What self-care strategies do you find most helpful?
+- What can we do to help you feel happier at work?
+- What suggestions do you have for how we can support each other's well-being in difficult times?
+- What employee well-being strategies would you like us to implement?
+- What personal boundaries do you have that you'd like us to respect?
+- What can we do to help you improve your work-life balance?
+- How easy do you find it to take breaks from work? Is there anything we can do to make it easier?
+- How can we ensure everyone on the team is taking care of themselves and each other at the moment and in general?
+- What resources could we provide to help you look after your physical, mental, and emotional well-being?
+- Which work tasks would you like to do more of each day?
+- Which work tasks make you feel most uncomfortable? Is there anything we can do to help make them easier?
+- What are three things you do to cope with challenging situations?
+- If you're having a bad day, what could you do to improve it? What could the team do to help?
+- Do you feel like part of the team? If not, how can we change that?
+- What steps are you taking to respect your health and recharge your batteries?
+- Have you been able to maintain your hobbies outside work? If not, what's getting in the way?
+- What's your current stress level from 1 to 10, where 10 is overwhelmed?
+- How motivated and engaged have you been feeling at work recently?
+- What's your favorite part of the job?
+- Have you been taking advantage of our current employee well-being resources? If not, why?
+- How easy do you find it to compartmentalize work and home life?
+- How do you feel about the company's culture and values? Would you make any changes to them if you could?
+- If you had a set of scales, with your stress levels on one side and happiness on the other, which would be heavier?
+- Are you enjoying work at the moment?
+- What changes could we make to help you enjoy work more?
+- What are the hardest parts of what you do each day?
+- What conflict management strategies do you employ at work?
+- Do you feel supported by us? How can we do better?
+- Are you exercising, socializing, meditating, or doing any of the other recommended activities for staying mentally well?
+- When work gets you down, what are the primary factors in play?
+## Check-in Questions for Kids
+
+- How are you feeling at this minute?
+- What is one thing you learned yesterday?
+- What do you want to learn today?
+- What is one challenge you have had this week?
+- What are you proudest of this week?
+- What are you most looking forward to this week?
+- What was your biggest win of the week so far?
+- If you had a time machine, what would you want to know about next week?
+- What is one thing you didn't do so well this week?
+- What is one question you have been wanting to ask?
+- What is the coolest thing that happened this week?
+- Share one positive non-work thing that happened this week.
+- What is your biggest current strength?
+- What is your biggest area for improvement?
+- Who helped you recently?
+- Who did you help recently?
+- What do you hope to achieve before the quarter/year ends? Do you think you will achieve it?
+- What is one thing you are grateful for this week?
+- What is one thing you want to improve on next week?
+- What made you smile today?
+- What's something kind someone did for you this week?
+- What are you excited to do this weekend?
+- What's your favorite part of the day?
+- What's something new you tried recently?
