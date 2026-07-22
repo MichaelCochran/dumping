@@ -11,6 +11,7 @@ struct PlayerView: View {
     @Query private var likedRecords: [LikedVideoRecord]
     @AppStorage("YTSpecific.autoplayEnabled") private var autoplayEnabled = true
     @State private var aspectRatio: CGFloat = 16.0 / 9.0
+    @State private var tags: [String] = []
     @State private var lastKnownPosition: Double = 0
 
     var body: some View {
@@ -73,7 +74,10 @@ struct PlayerView: View {
                     }
                     .task(id: video.id) {
                         lastKnownPosition = queueManager.resumedSeekSeconds
-                        aspectRatio = await YouTubeAPIService.shared.fetchAspectRatio(videoId: video.id)
+                        tags = []
+                        let details = await YouTubeAPIService.shared.fetchVideoExtraDetails(videoId: video.id)
+                        aspectRatio = details.aspectRatio
+                        tags = details.tags
                     }
                     .onChange(of: scenePhase) { _, newPhase in
                         guard newPhase == .background else { return }
@@ -129,6 +133,21 @@ struct PlayerView: View {
             Text("Uploaded \(video.publishedAt.formatted(date: .abbreviated, time: .omitted))")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+
+            if !tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(tags, id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.secondary.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+            }
 
             HStack(spacing: 16) {
                 Button {

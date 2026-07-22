@@ -1,6 +1,13 @@
 import CoreGraphics
 import Foundation
 
+/// Extra per-video metadata that's only worth fetching once a video is
+/// actually playing (not needed for the whole channel list up front).
+struct VideoExtraDetails {
+    let aspectRatio: CGFloat
+    let tags: [String]
+}
+
 enum YouTubeAPIError: LocalizedError {
     case missingAPIKey
     case channelNotFound
@@ -109,17 +116,18 @@ actor YouTubeAPIService {
         return playlists
     }
 
-    /// The video's true aspect ratio (width / height), so portrait uploads
-    /// (e.g. Shorts) aren't squeezed into a fixed 16:9 box. Falls back to
-    /// standard 16:9 on any failure — never throws, since this is only used
-    /// to size a view.
-    func fetchAspectRatio(videoId: String) async -> CGFloat {
+    /// The video's true aspect ratio (width / height) — so portrait uploads
+    /// (e.g. Shorts) aren't squeezed into a fixed 16:9 box — plus its
+    /// creator-set tags. Falls back to standard 16:9 / no tags on any
+    /// failure — never throws, since this is only used to enrich a view.
+    func fetchVideoExtraDetails(videoId: String) async -> VideoExtraDetails {
         let standardRatio: CGFloat = 16.0 / 9.0
-        guard let key = APIKeyStore.load(), !key.isEmpty else { return standardRatio }
+        let fallback = VideoExtraDetails(aspectRatio: standardRatio, tags: [])
+        guard let key = APIKeyStore.load(), !key.isEmpty else { return fallback }
 
         var components = URLComponents(url: baseURL.appendingPathComponent("videos"), resolvingAgainstBaseURL: false)!
         components.queryItems = [
-            URLQueryItem(name: "part", value: "player"),
+            URLQueryItem(name: "part", value: "snippet,player"),
             URLQueryItem(name: "id", value: videoId),
             // Requesting maxHeight guarantees embedWidth/embedHeight come back
             // scaled to the video's actual aspect ratio.
@@ -127,14 +135,18 @@ actor YouTubeAPIService {
             URLQueryItem(name: "key", value: key)
         ]
         guard let url = components.url,
-              let response: VideoPlayerResponse = try? await fetch(url),
-              let player = response.items?.first?.player,
-              let width = player.embedWidth,
-              let height = player.embedHeight,
-              width > 0, height > 0 else {
-            return standardRatio
+              let response: VideoDetailsResponse = try? await fetch(url),
+              let item = response.items?.first else {
+            return fallback
         }
-        return CGFloat(width) / CGFloat(height)
+
+        let ratio: CGFloat
+        if let width = item.player?.embedWidth, let height = item.player?.embedHeight, width > 0, height > 0 {
+            ratio = CGFloat(width) / CGFloat(height)
+        } else {
+            ratio = standardRatio
+        }
+        return VideoExtraDetails(aspectRatio: ratio, tags: item.snippet?.tags ?? [])
     }
 
     // MARK: - Channel resolution
@@ -260,6 +272,7 @@ private struct Snippet: Decodable {
     let title: String
     let publishedAt: String
     let thumbnails: Thumbnails
+    let tags: [String]?
 }
 
 private struct RelatedPlaylists: Decodable {
@@ -315,13 +328,14 @@ private struct PlaylistsListResponse: Decodable {
     let nextPageToken: String?
 }
 
-private struct VideoPlayerResponse: Decodable {
+private struct VideoDetailsResponse: Decodable {
     struct Player: Decodable {
         let embedWidth: Int?
         let embedHeight: Int?
     }
     struct Item: Decodable {
-        let player: Player
+        let snippet: Snippet?
+        let player: Player?
     }
     let items: [Item]?
 }

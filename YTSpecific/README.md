@@ -32,13 +32,17 @@ to YouTube.
   makes a network call; it's purely a local record you can review or remove.
   Both show the video's original upload date alongside when you watched/liked
   it.
-- **Orientation & sizing** — each video's real aspect ratio is fetched from
-  the Data API (`videos.list?part=player`) and used to size the player box,
-  so portrait uploads (Shorts) display tall instead of being squeezed into a
-  fixed 16:9 strip. Rotating the device to landscape expands the video to
-  fill the screen; rotating back to portrait returns to the normal layout
-  with title/like/skip below the video — the player view stays the same
-  instance across the rotation, so playback position isn't lost.
+- **Orientation & sizing** — each video's real aspect ratio and tags are
+  fetched from the Data API (`videos.list?part=snippet,player`, one call) and
+  used to size the player box, so portrait uploads (Shorts) display tall
+  instead of being squeezed into a fixed 16:9 strip. Rotating the device to
+  landscape expands the video to fill the screen; rotating back to portrait
+  returns to the normal layout with title/like/skip below the video — the
+  player view stays the same instance across the rotation, so playback
+  position isn't lost.
+- **Tags** — YouTube never shows a video's creator-set tags in its own UI,
+  but they're part of the Data API response; shown as a scrollable row of
+  chips under the video title when present.
 - **Retry** — if a channel, playlist, or search lookup fails (e.g. a
   connection hiccup), a Retry button re-runs the same request instead of
   leaving you stuck.
