@@ -13,6 +13,9 @@ final class PlaybackQueueManager {
     /// name, or "Channel — Playlist Name" when a specific playlist is active.
     private(set) var activeSourceTitle: String?
     private(set) var currentVideo: YouTubeVideo?
+    /// Where currentVideo should start playing from — non-zero exactly once,
+    /// right after resuming a saved position; 0 for every normal advance.
+    private(set) var resumedSeekSeconds: Double = 0
     private(set) var isLoading = false
     private(set) var isExhausted = false
     private(set) var errorMessage: String?
@@ -73,7 +76,13 @@ final class PlaybackQueueManager {
         do {
             allVideos = try await fetch()
             rebuildQueue(order: order)
-            advance()
+            if let saved = PlaybackPositionStore.load(),
+               let match = allVideos.first(where: { $0.id == saved.videoId }) {
+                queue.removeAll { $0.id == match.id }
+                selectVideo(match, seekSeconds: saved.positionSeconds)
+            } else {
+                advance()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -103,13 +112,18 @@ final class PlaybackQueueManager {
             return
         }
         let next = queue.removeFirst()
-        currentVideo = next
-        isExhausted = false
-        recordWatched(next)
+        selectVideo(next, seekSeconds: 0)
     }
 
     func skip() {
         advance()
+    }
+
+    private func selectVideo(_ video: YouTubeVideo, seekSeconds: Double) {
+        currentVideo = video
+        resumedSeekSeconds = seekSeconds
+        isExhausted = false
+        recordWatched(video)
     }
 
     private func recordWatched(_ video: YouTubeVideo) {

@@ -7,8 +7,11 @@ struct PlayerView: View {
     let onChangeChannel: () -> Void
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var likedRecords: [LikedVideoRecord]
+    @AppStorage("YTSpecific.autoplayEnabled") private var autoplayEnabled = true
     @State private var aspectRatio: CGFloat = 16.0 / 9.0
+    @State private var lastKnownPosition: Double = 0
 
     var body: some View {
         GeometryReader { geometry in
@@ -51,8 +54,11 @@ struct PlayerView: View {
 
                         YouTubePlayerWebView(
                             videoId: video.id,
+                            startSeconds: queueManager.resumedSeekSeconds,
+                            autoplay: autoplayEnabled,
                             onEnded: { queueManager.advance() },
-                            onError: { queueManager.advance() }
+                            onError: { queueManager.advance() },
+                            onTimeUpdate: { lastKnownPosition = $0 }
                         )
                         .aspectRatio(aspectRatio, contentMode: .fit)
                         .frame(maxWidth: .infinity, maxHeight: isLandscape ? .infinity : geometry.size.height * 0.6)
@@ -66,7 +72,17 @@ struct PlayerView: View {
                         }
                     }
                     .task(id: video.id) {
+                        lastKnownPosition = queueManager.resumedSeekSeconds
                         aspectRatio = await YouTubeAPIService.shared.fetchAspectRatio(videoId: video.id)
+                    }
+                    .onChange(of: scenePhase) { _, newPhase in
+                        guard newPhase == .background else { return }
+                        PlaybackPositionStore.save(PlaybackPosition(
+                            videoId: video.id,
+                            channelId: video.channelId,
+                            positionSeconds: lastKnownPosition,
+                            savedAt: .now
+                        ))
                     }
                 } else if queueManager.isExhausted {
                     centered {

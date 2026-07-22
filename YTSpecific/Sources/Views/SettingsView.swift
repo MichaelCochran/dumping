@@ -5,12 +5,21 @@ struct SettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @AppStorage("YTSpecific.playbackOrder") private var playbackOrderRaw: String = PlaybackOrder.newestFirst.rawValue
+    @AppStorage("YTSpecific.autoplayEnabled") private var autoplayEnabled = true
     @State private var apiKeyInput: String = APIKeyStore.load() ?? ""
     @State private var savedConfirmation = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Toggle("Autoplay", isOn: $autoplayEnabled)
+                } footer: {
+                    Text(autoplayEnabled
+                         ? "Each video starts playing automatically."
+                         : "Each video loads paused — tap play to start it.")
+                }
+
                 Section("Playback Order") {
                     Picker("Order", selection: $playbackOrderRaw) {
                         ForEach(PlaybackOrder.allCases) { order in

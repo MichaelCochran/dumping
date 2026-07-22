@@ -42,6 +42,15 @@ to YouTube.
 - **Retry** — if a channel, playlist, or search lookup fails (e.g. a
   connection hiccup), a Retry button re-runs the same request instead of
   leaving you stuck.
+- **Resume position** — the current video and timestamp are saved whenever
+  the app leaves the foreground. Relaunching (even after iOS has fully killed
+  the process — the "locked the phone for a while" case) seeks back to that
+  exact spot instead of jumping to the next unwatched video. Note this is
+  position memory, not background audio: YouTube's embed terms don't allow
+  continuing playback while the app isn't visible, so it does pause when you
+  leave, same as before — it just won't lose your place.
+- **Autoplay** — toggle in Settings. On (default), each video starts playing
+  immediately; off, each video loads paused and you tap play to start it.
 - **API key** — stored in the device Keychain via Settings, not committed to
   git, not bundled in the app.
 
@@ -88,7 +97,7 @@ YTSpecific/
     YTSpecificApp.swift
     Models/                    # YouTubeChannel, YouTubeVideo, YouTubePlaylist, PlaybackOrder
     Persistence/                # SwiftData models: WatchedVideoRecord, LikedVideoRecord
-    Services/                  # YouTubeAPIService, PlaybackQueueManager, APIKeyStore, RecentChannelStore, ChannelHistoryStore
+    Services/                  # YouTubeAPIService, PlaybackQueueManager, APIKeyStore, RecentChannelStore, ChannelHistoryStore, PlaybackPositionStore
     Views/                     # ContentView, ChannelSearchView, PlayerView, PlaylistsView, YouTubePlayerWebView, HistoryView, LikedVideosView, SettingsView
   Resources/
     Assets.xcassets
