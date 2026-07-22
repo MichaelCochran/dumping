@@ -41,7 +41,7 @@ struct YouTubePlayerWebView: UIViewRepresentable {
                 "start": Int(startSeconds)
             ])
         } else {
-            playerView.cueVideoById(videoId, startSeconds: Float(startSeconds))
+            playerView.cueVideo(byId: videoId, startSeconds: Float(startSeconds))
         }
     }
 
