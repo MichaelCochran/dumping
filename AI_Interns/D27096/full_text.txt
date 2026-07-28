@@ -1,0 +1,95 @@
+Skip to main content
+C
+HOME
+BROWSE SUBMISSIONS
+FAQ
+PROJECT ARCHIVE
+SRE Agent(D27096)
+Team Taschner, Nicholas A (US)
+Promote
+1
+View Voters
+
+Requirements development is an iterative and lengthy process. Countless hours can be spent pouring over notes, audio recordings, and email threads to extract, validate, and formalize stakeholder intent. ﻿Manual transcription leads to missed details and inconsistent "shall" statements.​ ﻿Ambiguous or incomplete requirements cause re‑work and defects.​ ﻿Traceability and verification (D‑T‑A) are often fragmented or absent. Our AI agent works to prevent all of these difficulties and improve the efficiency of Systems Engineering at Lockheed.
+
+Attachments (2)
+2026 AIC SRE Agent.pptx
+1.10MB
+Organization / Team*
+Lawn Chairs
+Solution Overview*
+
+- Target audience – System architects, program managers, requirement engineers, and cross‑functional workshop facilitators​
+
+- Core workflow​
+
+Upload a transcript, audio, video, or structured metadata.​
+Automatic transcription.​
+AI parsing extracts functional / non‑functional requirements, risks, assumptions, and constraints.​
+Classification → type, verification method, acceptance criteria.​
+Output in selected format​
+
+- Key features​
+
+"Shall" statement generator with template‑compliant phrasing.​
+Risk & ambiguity flagging with auto‑generated clarifying questions.​
+Verified verification‑method tagging.​
+Configurable output.​
+
+- Value addition – reduces manual effort, improves consistency, surfaces hidden risks, and delivers results in minutes.​
+
+Value Proposition*
+70 % faster turnaround from meeting to complete requirements table (e.g., 30 min meeting → 9 min draft).​
+Consistent "shall" statements and verification codes → > 95 % compliance with RE templates, reducing re‑work.​
+Automatic risk & ambiguity flags capture every uncertain item early, cutting downstream change‑order costs.​
+$12 k+ saved per quarter per team from labor‑hour reduction and avoided risk mitigation.​
+All processing stays on‑premise → meets security/compliance without extra controls.
+Additional Information
+No answer
+Completed PowerPoint: Document Upload Certification*
+I certify that I have uploaded my completed PowerPoint presentation to the required folder
+linked above.
+Link to Recorded Demo*
+https://lmco.sharepoint.us/:v:/r/sites/US-OneLM_AI_COE/Shared%20Documents/AI%20Intern%20Challenge/2026%20AI%20Intern%20Challenge/Submission%20Demo%20Recordings/SRE_AIC.mp4?csf=1&web=1&e=hSxBns
+Please provide the name of the Genesis Organization for your Agent(s):*
+us/teamlawnchairs
+Please provide the Agent Name(s) as listed in Genesis:*
+
+SRE Agent
+
+Please certify that you have shared your Agent with the 2026 AI Intern Challenge Organization*
+Yes
+I certify that I have not attached or included any unallowable information (such as Third Party Proprietary Information, Classified Information, or Export Controlled Information) in this submission:*
+Yes
+Comments (0)
+Comments (0)
+C
+Add a comment
+
+No comments
+Submitted
+07/17/2026
+Status
+UNDER REVIEW
+Stats
+Vote Score
+1
+Votes
+1
+Rank
+1
+Unique Views
+R
+B
+G
+8
+Total Views
+28
+Comments
+0
+Favorited
+0
+Progress
+Stage: Evaluation
+Linked Ideas
+No linked Ideas

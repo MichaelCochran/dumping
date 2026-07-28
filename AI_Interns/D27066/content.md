@@ -1,0 +1,88 @@
+# Lockheed Martin Innovation : View Submission
+
+**URL:** https://lockheedmartin.brightidea.com/D27066
+
+**Extracted:** 2026-07-28 15:38:55
+
+---
+
+Lockheed Martin Innovation : View Submission
+
+- 
+- 
+- 
+
+- 
+ 
+- 
+ 
+- 
+
+ Skip to main content** Search **
+## Notifications
+**No NotificationsMark All as Read**
+## Action Items
+**No Action ItemsView All**CC**Cochran, Michael (US)michael.cochran@lmco.com
+- **Home
+- **Profile
+- **Explore Apps
+- **Log Out
+- *
+- HOME
+- BROWSE SUBMISSIONS
+- FAQ
+- PROJECT ARCHIVE*
+- 2024
+- 2025
+- *
+- HOME
+- BROWSE SUBMISSIONS
+- FAQ
+- PROJECT ARCHIVE*
+- 2024
+- 2025Fortify++(D27066)****
+- ** Copy Link
+- ** Report Abuse...
+- ** Print
+- ** Send to Project Room**Team Van Beck, Chad F (US)**Promote1View Voters
+Security teams at Lockheed Martin rely on Fortify Static Application Security Testing (SAST) to scan large C++ codebases for potential vulnerabilities. These scans can generate hundreds or thousands of findings per project, and a substantial portion are ultimately determined to be non‑issues or false positives.
+
+Today, security analysts must manually review each finding, locate the relevant source code, interpret Fortify's rule description, and coordinate with developers when the context is unclear. For a typical project, this review work can take many days or even weeks of focused analyst time.
+
+This manual process slows down the path from scan to release, consumes scarce expert capacity, and makes it harder to concentrate on the smaller set of findings that truly represent security risk. There is a need for an internal AI‑assisted solution that can help separate likely false positives from likely real issues, while keeping analysts in control of final decisions.
+Attachments (2)**8B805FF8-8123-11F1-8DAC-0E70A83EB993.png5.86KBInternChallenge_Fortify__Chad_Shayan.pptx311.52KB**Organization / Team*NGI Space - Cyber EngineeringSolution Overview*
+Fortify++ is an AI‑assisted analysis tool that works on top of existing Fortify scans. It ingests Fortify report artifacts (such as .fpr, CSV, or PDF), pulls the related source‑code snippets from the Git repository, and uses Genesis to classify each finding as likely true issue, likely false positive, or needs review.
+
+The prototype includes:
+
+- A simple web UI for uploading Fortify reports and starting an analysis
+- A back‑end service that parses findings and retrieves the matching code context
+- An AI classification step using Genesis, with confidence indicators
+- An interactive results dashboard with filters and summary charts
+- Export options (CSV, JSON, PDF/Markdown) for sharing results or attaching to existing review workflows
+The design preserves current Fortify and GitLab CI/CD workflows while adding an AI‑based layer to help analysts quickly understand and organize scan output.
+Value Proposition*
+Fortify++ has the potential to deliver significant time and cost savings for Lockheed Martin cyber teams.
+
+Today, reviewing a single Fortify scan can require over 200 hours of manual analyst effort. In our prototype evaluation, using AI to pre-classify findings reduced the manual review workload to roughly 10–20 hours per project, while still keeping analysts in control of final decisions.
+
+Using a fully loaded analyst cost of about $150,000 per year (approximately $72 per hour):
+
+Per project:
+
+- Time saved is roughly 180 hours
+- Cost impact is approximately 180 × $72 ≈ $13,000 saved per project
+Ongoing false-positive review:
+
+- Avoiding re-checking about 100 false positives per month (around 30 minutes each) saves about 50 hours
+- Cost impact is about 50 × $72 ≈ $3,600 per month, or roughly $43,000 per year for each team using Fortify++
+By automatically flagging likely false positives and highlighting items that merit closer review, Fortify++ helps free up expert time, shorten the cycle from scan to release decision, and scale security reviews across more projects without a proportional increase in analyst cost.
+Additional Information
+- Built on Lockheed Martin's internal Genesis LLM platform and LMNavigator components
+- Integrates with existing GitLab CI/CD pipelines that already produce Fortify .fpr artifacts
+- Uses Fortify CLI tools and Git repository access to extract findings and code context
+- All processing stays within Lockheed Martin's internal network; no external models or services are used
+- Initial focus is on C++ codebases, with a path to extend to other languages and tools.
+- Designed so that AI output is advisory: security analysts remain the final decision‑makers on whether a finding is accepted, rejected, or escalatedCompleted PowerPoint: Document Upload Certification*I certify that I have uploaded my completed PowerPoint presentation to the required folderlinked above.Link to Recorded Demo*https://lmco.sharepoint.us/:v:/s/US-OneLM_AI_COE/IQAuwrnzeB_rQqXvoNfVEw91AT7JTlidDHJayKJ_5RF1l3c?e=jJ5AIbPlease provide the name of the Genesis Organization for your Agent(s):*FortifyPlusPlusAIC2026Please provide the Agent Name(s) as listed in Genesis:*
+FortifyPlusPlus
+Please certify that you have shared your Agent with the 2026 AI Intern Challenge Organization*YesI certify that I have not attached or included any unallowable information (such as Third Party Proprietary Information, Classified Information, or Export Controlled Information) in this submission:*YesComments (0)Comments (0)CAdd a commentDrag file(s) hereNo commentsSubmitted07/16/2026StatusUnder ReviewStatsVote Score1Votes1Rank1Unique ViewsSFC30Total Views74Comments0Favorited0ProgressStage: EvaluationLinked IdeasNo linked Ideas

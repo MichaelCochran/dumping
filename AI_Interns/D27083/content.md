@@ -1,0 +1,72 @@
+# Lockheed Martin Innovation : View Submission
+
+**URL:** https://lockheedmartin.brightidea.com/D27083
+
+**Extracted:** 2026-07-28 15:37:23
+
+---
+
+Lockheed Martin Innovation : View Submission
+
+- 
+- 
+- 
+
+- 
+ 
+- 
+ 
+- 
+
+ Skip to main content** Search **
+## Notifications
+**No NotificationsMark All as Read**
+## Action Items
+**No Action ItemsView All**CC**Cochran, Michael (US)michael.cochran@lmco.com
+- **Home
+- **Profile
+- **Explore Apps
+- **Log Out
+- *
+- HOME
+- BROWSE SUBMISSIONS
+- FAQ
+- PROJECT ARCHIVE*
+- 2024
+- 2025
+- *
+- HOME
+- BROWSE SUBMISSIONS
+- FAQ
+- PROJECT ARCHIVE*
+- 2024
+- 2025TRIDENT(D27083)****
+- ** Copy Link
+- ** Report Abuse...
+- ** Print
+- ** Send to Project Room**Team Steele, Matthew B (US)**Promote1View Voters
+When system engineers deploy software, operating systems, or cloud configurations across corporate networks, they face a severe bottleneck: validating that these technologies comply with strict internal standards and don't introduce dangerous security flaws. Currently, verifying a single piece of software requires tedious, manual cross-referencing across isolated databases. This includes auditing historical approvals within the internal Electronic Free and Open Source Software (EFOSS) tool, checking for active weaponization via CISA, and analyzing structural flaws inside MITRE's CWE database. 
+
+Feedback from internal Level 2 Engineers highlights that the baseline EFOSS tool is inefficient; after extracting data from it, engineers must manually log into and pivot through multiple secondary intelligence sites just to verify patch constraints. Furthermore, the administrative burden of manually generating these risk profiles forces teams into a costly paradox—slowing down mission-critical deployment timelines or inadvertently shipping systems while compliance research is lagging out-of-band. Manual research on active vulnerabilities diverts our security teams from proactive operational defense, stalls Change Control Board (CCB) approvals, increases system integration friction, and causes project cost overruns. Personnel note that a critical operational gap stems from a lack of a standardized corporate baseline across distinct company operating locations, forcing individual sites to construct fragmented tracking methods.
+Attachments (2)**55E3BD4B-815C-11F1-8DAC-0E70A83EB993.png638.67KB2026 AI Intern Challenge Presentation - Trident.pptx1.88MB**Organization / Team*TRIDENT Solution Overview*
+TRIDENT (Tri-era Risk Intelligence & Decision Engineering Nexus for Triage) is an enterprise-grade AI decision-support assistant engineered to automate the technical triage, validation, and risk analysis required during the FOSS approval pipeline. Utilizing a secure Model Context Protocol (MCP) server architecture, the system aggregates over 349,000 total security records—including 347K+ vulnerabilities, 1,400+ weaponized threats, and 944 code flaws—from historically siloed data pools and global intelligence feeds into a single localized knowledge layer:
+
+- **FOSS Request History API**: Ingests internal historical approvals, rejections, and past engineering descriptions to establish an immediate, unified corporate baseline, eliminating out-of-band manual pivot searches across fragmented locations.
+- ﻿**CISA KEV Cache**: Layers live real-world exploitation telemetry, exploit names, detailed risk summaries, and federally mandated remediation windows onto the flagged vulnerability identifiers.
+- ﻿**MITRE CWE Architecture Matrix**: Exposes root-cause structural weaknesses, system advisor impacts (e.g., Confidentiality/Access Control scopes broken), and cross-phase mitigations mapped directly to internal server environments, firewall rules, and Active Directory domains.
+﻿
+﻿Value Proposition*
+- **Collapses the Change Control Bottleneck**: Automates the multi-agency manual research pipeline, dropping the Change Control Board (CCB) vulnerability and policy triage timeline down to a single automated lookup. TRIDENT's 44-second results deliver full security data in a single query, providing a ~191× speed-up (2.33 hr manual / 0.012 hr tool) and cutting manual effort by ~99.5%. As Mariam Shaw *(Information System Security Manager)* notes, "This manual analysis process usually takes 3+ days per review, creating systemic project delivery backlogs."
+- **Reclaims Productive Enterprise Capacity**: Scaled enterprise-wide, TRIDENT reclaims 304k hours per year (~38k work-days) of engineering capacity across the enterprise footprint (15 staff/site x 167 sites), directly eliminating 5 to 7 hours of manual tracking per week for targeted security professionals and administrators.
+- **Drives Multi-Faceted Engineering Upskilling**: Directly addresses the strategic vision of James McBride *(Associate Manager, Cyber Systems Security Engineering)* to build a multi-functional and broadly skilled workforce. By automating outmoded verification routines, TRIDENT shifts elite talent away from repetitive data hunting and administrative silos to focus on proactive architectural defense and system integration.
+- **Eliminates Disparate Workflow Friction**: Replaces manual site-pivoting with an intuitive single-screen interface. This eliminates the manual research friction that target personnel empirically score as a 7/10 overhead drain, satisfying a direct user mandate where 100% of surveyed security managers identify TRIDENT's unified lookup as an essential workspace operational requirement.
+- **Zero-Trust Offline Network Resiliency**: Runs completely via an optimized secure local snapshot architecture (cwe_cache.json and cisa_kev_cache.json). The tool cleanly bypasses corporate proxy certificate interception (verify=False) and Web Application Firewall drops (User-Agent spoofing), providing infinite, zero-cost throughput with absolute data security and zero model hallucinations.Additional Information
+Gitlab Repo Link: ﻿https://gitlab.us.lmco.com/e487499/ai-challenge﻿
+Completed PowerPoint: Document Upload Certification*I certify that I have uploaded my completed PowerPoint presentation to the required folderlinked above.Link to Recorded Demo*https://lmco.sharepoint.us/:v:/r/sites/US-OneLM_AI_COE/Shared%20Documents/AI%20Intern%20Challenge/2026%20AI%20Intern%20Challenge/Submission%20Demo%20Recordings/TRIDENT%20Demo.webm?csf=1&web=1&e=E8uKA9&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3DPlease provide the name of the Genesis Organization for your Agent(s):*CCB AI Intern Challenge AgentPlease provide the Agent Name(s) as listed in Genesis:*
+TRIDENT AIC 2026
+Please certify that you have shared your Agent with the 2026 AI Intern Challenge Organization*YesI certify that I have not attached or included any unallowable information (such as Third Party Proprietary Information, Classified Information, or Export Controlled Information) in this submission:*YesComments (1)Comments (1)CAdd a commentDrag file(s) here*SSteele, Matthew B (US)6 days ago (Edited)*
+- ** Copy Link
+- ** Report Abuse...Incase the demo link didn't work before:
+
+https://lmco.sharepoint.us/:v:/s/US-OneLM_AI_COE/IQAWudA18zgGSKGN0W_SGTAwAdGja_-Rsypfttaug4CbRlE
+**ReplySubmitted07/16/2026StatusUnder ReviewStatsVote Score1Votes1Rank1Unique ViewsGKM22Total Views85Comments1Favorited0ProgressStage: EvaluationLinked IdeasNo linked Ideas

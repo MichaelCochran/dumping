@@ -58,3 +58,7 @@ Thumbs.db
 downloads/
 *.tmp
 *.temp
+
+# Large files (exceeding GitHub's 100MB limit)
+*.pptx
+*.ppt

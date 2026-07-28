@@ -1,0 +1,77 @@
+Skip to main content
+C
+HOME
+BROWSE SUBMISSIONS
+FAQ
+PROJECT ARCHIVE
+LMRecognition Assistant(D27076)
+V
+Vallee, Richard L1 (US)
+Promote
+1
+View Voters
+
+Lockheed Martin's current LMRecognition experience relies on an AwardCo bot that provides only static, generic suggestions, making the recognition process feel time‑consuming and unrelated to day‑to‑day work. As a result, many employees skip giving recognitions, leading to low platform utilization and missed chances to reinforce the company's Core Values, Cultural Philosophies, and A4 pillars. This weak linkage also deprives leadership of the data needed to monitor and improve cultural health across the organization.
+
+Attachments (2)
+2026 AI Intern Challenge Presentation - Ricky Vallee.pptx
+2.10MB
+Organization / Team*
+Team Hercules 2026
+Solution Overview*
+
+The solution is an AI‑driven LMRecognition Assistant that instantly transforms a user‑provided behavior description into three ready‑to‑post, multi‑sentence comments, each aligned with Lockheed Martin's Core Values, Cultural Philosophies, and A4 pillars. The assistant extracts name, project, and action details, inserts the appropriate attributes (up to three per comment), and attaches a concise micro‑learning nugget. Integrated with the existing AwardCo API, it also is ready to update badge progress, tracks streaks, and feeds anonymized usage data to leadership dashboards if the agent were to be integrated with the LMRecognition platform. This streamlined workflow turns recognition into a fast, personalized, and culturally reinforcing habit across the enterprise.
+
+Value Proposition*
+
+By delivering instant, culturally‑aligned recognitions, the AI assistant boosts employee participation in LMRecognition, leading to stronger reinforcement of core values and faster adoption of desired behaviors. Higher recognition rates translate into improved teamwork, reduced rework, and clearer data for leaders to drive continuous‑improvement—ultimately enhancing productivity and cost efficiency across Lockheed Martin operations.
+
+Additional Information
+No answer
+Completed PowerPoint: Document Upload Certification*
+I certify that I have uploaded my completed PowerPoint presentation to the required folder
+linked above.
+Link to Recorded Demo*
+https://lmco.sharepoint.us/:v:/s/US-OneLM_AI_COE/IQCIt515svOfR62q5IdjjMWEAeS_UPpetN9wPGbcBIWErwU?e=SBxNgs
+Please provide the name of the Genesis Organization for your Agent(s):*
+Team Hercules 2026
+Please provide the Agent Name(s) as listed in Genesis:*
+
+LMRecognition Assistant -AIC 2026-
+
+Please certify that you have shared your Agent with the 2026 AI Intern Challenge Organization*
+Yes
+I certify that I have not attached or included any unallowable information (such as Third Party Proprietary Information, Classified Information, or Export Controlled Information) in this submission:*
+Yes
+Comments (0)
+Comments (0)
+C
+Add a comment
+
+No comments
+Submitted
+07/16/2026
+Status
+UNDER REVIEW
+Stats
+Vote Score
+1
+Votes
+1
+Rank
+1
+Unique Views
+S
+D
+L
+25
+Total Views
+50
+Comments
+0
+Favorited
+0
+Progress
+Stage: Evaluation
+Linked Ideas
+No linked Ideas
