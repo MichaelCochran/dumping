@@ -1,0 +1,181 @@
+{
+    "schema_version": 5,
+    "data_directory_path": "data",
+    "output_directory_path": "output",
+    "output_file_name": "cougar-compare",
+    "field_update_default": false,
+    "field_overwrite_default": false,
+    "field_insert_default": false,
+    "display_format_defaults":
+    {
+        "DATE": "{0:%Y-%m-%d}",
+        "PERCENT": "{0:.0%}"
+    },
+    "list_display_format_default":
+    {
+        "item_delimiter": ", "
+    },
+    "excel_display_format_defaults":
+    {
+        "DATE": "yyyy-mm-dd",
+        "PERCENT": "0%"
+    },
+    "data_interfaces": [
+        {
+            "id": "sheet",
+            "type": "SHEET",
+            "config": {
+                "input_file": "Cougar October pre ME - JIRA.xlsx"
+            }
+        },
+        {
+            "id": "jira",
+            "type": "JIRA",
+            "config": {
+                "server": "https://ebstools-jira.us.lmco.com/",
+                "jql_string": "project = Cougar",
+                "write_enabled": false,
+                "graph_provider_plugin_descriptor": {
+                    "module_name": "velociraptor.plugins.jira_issue_graph_provider",
+                    "class_name": "JiraIssueGraphProvider",
+                    "config":
+                    {
+                        "parent_link_epic_data_id": "customfield_10100"
+                    }
+                },
+                "value_provider_plugin_descriptors": [
+                    {
+                        "module_name": "velociraptor.plugins.jira_percent_complete_provider",
+                        "class_name": "JiraPercentCompleteProvider",
+                        "config":
+                        {
+                            "story_points_data_id": "customfield_10106"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "left_source": {
+        "id": "sheet",
+        "name": "Sheet",
+        "data_interface_id": "sheet",
+        "pk_field_id": "sheet:ebIMS#",
+        "fk_field_id": "sheet:Jira Key"
+    },
+    "right_source": {
+        "id": "jira",
+        "name": "Jira",
+        "data_interface_id": "jira",
+        "pk_field_id": "jira:key",
+        "fk_field_id": "jira:customfield_11405"
+    },
+    "fields": [
+        {"name": "Late Start Baseline", "source_id": "__calculated", "data_id": "late_start_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(OR({{sheet:Baseline Start}} < {{jira_actual_start}}, AND({{sheet:Baseline Start}} < TODAY(), ISBLANK({{jira_actual_start}}))), TRUE, FALSE)" },
+            "display": true, "display_index": 15},
+        {"name": "Late Finish Baseline", "source_id": "__calculated", "data_id": "late_finish_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(OR({{sheet:Baseline Finish}} < {{jira_actual_end}}, AND({{sheet:Baseline Finish}} < TODAY(), ISBLANK({{jira_actual_end}}))), TRUE, FALSE)" },
+            "display": true, "display_index": 16},
+        {"name": "Overdue Start Baseline", "source_id": "__calculated", "data_id": "overdue_start_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{sheet:Baseline Start}} < TODAY(), ISBLANK({{jira_actual_start}})), TRUE, FALSE)" },
+            "display": true, "display_index": 17},
+        {"name": "Overdue Finish Baseline", "source_id": "__calculated", "data_id": "overdue_finish_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{sheet:Baseline Finish}} < TODAY(), ISBLANK({{jira_actual_end}})), TRUE, FALSE)" },
+            "display": true, "display_index": 18},
+        {"name": "30 Start/Finish Baseline", "source_id": "__calculated", "data_id": "30_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{sheet:Baseline Start}} <= TODAY()+30, ISBLANK({{jira_actual_start}})), TRUE, IF(AND({{sheet:Baseline Finish}} < TODAY()+30, ISBLANK({{jira_actual_end}})), TRUE, FALSE))" },
+            "display": true, "display_index": 19},
+        {"name": "60 Start Baseline", "source_id": "__calculated", "data_id": "60_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{sheet:Baseline Start}} <= TODAY()+60, {{sheet:Baseline Start}} > TODAY()+30, ISBLANK({{jira_actual_start}})), TRUE, FALSE)" },
+            "display": true, "display_index": 20},
+        {"name": "90 Start Baseline", "source_id": "__calculated", "data_id": "90_baseline", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{sheet:Baseline Start}} <= TODAY()+90, {{sheet:Baseline Start}} > TODAY()+60, ISBLANK({{jira_actual_start}})), TRUE, FALSE)" },
+            "display": true, "display_index": 21},
+        {"name": "Late Start Planned", "source_id": "__calculated", "data_id": "late_start_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF({{sheet:Baseline Start}} < {{jira_planned_start}}, TRUE, FALSE)" },
+            "display": true, "display_index": 22},
+        {"name": "Late Finish Planned", "source_id": "__calculated", "data_id": "late_finish_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF({{sheet:Baseline Finish}} < {{jira_planned_end}}, TRUE, FALSE)" },
+            "display": true, "display_index": 23},
+        {"name": "Overdue Start Planned", "source_id": "__calculated", "data_id": "overdue_start_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{jira_planned_start}} < TODAY(), ISBLANK({{jira_actual_start}})), TRUE, FALSE)" },
+            "display": true, "display_index": 24},
+        {"name": "Overdue Finish Planned", "source_id": "__calculated", "data_id": "overdue_finish_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{jira_planned_end}} < TODAY(), ISBLANK({{jira_actual_end}})), TRUE, FALSE)" },
+            "display": true, "display_index": 25},
+        {"name": "30 Start/Finish Planned", "source_id": "__calculated", "data_id": "30_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{jira_planned_start}} <= TODAY()+30, ISBLANK({{jira_actual_start}})), TRUE, IF(AND({{sheet:Baseline Finish}} < TODAY()+30, ISBLANK({{jira_actual_end}})), TRUE, FALSE))" },
+            "display": true, "display_index": 26},
+        {"name": "60 Start Planned", "source_id": "__calculated", "data_id": "60_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{jira_planned_start}} <= TODAY()+60, {{jira_planned_start}} > TODAY()+30, ISBLANK({{jira_actual_start}})), TRUE, FALSE)" },
+            "display": true, "display_index": 27},
+        {"name": "90 Start Planned", "source_id": "__calculated", "data_id": "90_planned", "type": "FORMULA",
+            "metadata": { "value": "=IF(AND({{jira_planned_start}} <= TODAY()+90, {{jira_planned_start}} > TODAY()+60, ISBLANK({{jira_actual_start}})), TRUE, FALSE)" },
+            "display": true, "display_index": 28},
+
+        {"name": "Row Number", "source_id": "sheet", "data_id": "__row_number", "type": "NUMBER"},
+        {"name": "Jira Key (Sheet)", "source_id": "sheet", "data_id": "Jira Key", "type": "JIRA_KEY"},
+        {"name": "IMS # (Sheet)", "source_id": "sheet", "data_id": "ebIMS#", "type": "STRING"},
+        {"name": "Summary (Sheet)", "source_id": "sheet", "data_id": "Name", "type": "STRING", "display": true, "display_index": 3},
+        {"name": "% Done (Sheet)", "source_id": "sheet", "data_id": "Physical % Complete", "type": "PERCENT"},
+        {"name": "Work (Sheet)", "source_id": "sheet", "data_id": "Work", "type": "STRING", "display": true, "display_index": 1},
+        {"name": "Baseline Start Date (Sheet)", "source_id": "sheet", "data_id": "Baseline Start", "type": "DATE"},
+        {"name": "Baseline End Date (Sheet)", "source_id": "sheet", "data_id": "Baseline Finish", "type": "DATE"},
+        {"name": "Actual Start Date (Sheet)", "source_id": "sheet", "data_id": "Actual Start", "type": "DATE"},
+        {"name": "Actual End Date (Sheet)", "source_id": "sheet", "data_id": "Actual Finish", "type": "DATE"},
+        {"name": "Planned Start Date (Sheet)", "source_id": "sheet", "data_id": "Start", "type": "DATE"},
+        {"name": "Planned End Date (Sheet)", "source_id": "sheet", "data_id": "Finish", "type": "DATE"},
+        {"name": "Deadline (Sheet)", "source_id": "sheet", "data_id": "Deadline", "type": "DATE"},
+        {"name": "Jira Key (Jira)", "source_id": "jira", "data_id": "key", "type": "JIRA_KEY"},
+        {"name": "Issue Type", "source_id": "jira", "data_id": "issuetype.name", "type": "STRING", "display": true, "display_index": 6},
+        {"name": "IMS # (Jira)", "source_id": "jira", "data_id": "customfield_11405", "type": "STRING"},
+        {"name": "Summary (Jira)", "source_id": "jira", "data_id": "summary", "type": "STRING","display": true, "display_index": 4},
+        {"name": "Components (Jira)", "source_id": "jira", "data_id": "components.name", "type": "STRING", "display": true, "display_index": 7},
+        {"id": "jira_baseline_start", "name": "Baseline Start Date (Jira)", "source_id": "jira", "data_id": "customfield_11104", "type": "DATE", "updatable": false, "overwritable": false},
+        {"id": "jira_baseline_end", "name": "Baseline End Date (Jira)", "source_id": "jira", "data_id": "customfield_11105", "type": "DATE", "updatable": false, "overwritable": false},
+        {"id": "jira_actual_start", "name": "Actual Start Date (Jira)", "source_id": "jira", "data_id": "customfield_12400", "type": "DATE", "updatable": false, "overwritable": false},
+        {"id": "jira_actual_end", "name": "Actual End Date (Jira)", "source_id": "jira", "data_id": "customfield_12401", "type": "DATE", "updatable": false, "overwritable": false},
+        {"id": "jira_planned_start", "name": "Planned Start Date (Jira)", "source_id": "jira", "data_id": "customfield_13421", "type": "DATE", "updatable": false, "overwritable": false},
+        {"id": "jira_planned_end", "name": "Planned End Date (Jira)", "source_id": "jira", "data_id": "customfield_13422", "type": "DATE", "updatable": false, "overwritable": false},
+        {"id": "jira_dependency", "name": "Dependency Need Date (Jira)", "source_id": "jira", "data_id": "customfield_12204", "type": "DATE", "updatable": false, "overwritable": false},
+        {
+            "name": "Sum Completed Points (Jira)",
+            "source_id": "jira",
+            "data_id": "__completed_story_points_sum",
+            "type": "NUMBER",
+            "display": false
+        },
+        {
+            "name": "Sum Story Points (Jira)",
+            "source_id": "jira",
+            "data_id": "__story_points_sum",
+            "type": "NUMBER",
+            "display": false
+        },
+        {
+            "id": "jira_percent_done", 
+            "name": "Percent Complete (Jira)",
+            "source_id": "jira",
+            "data_id": "__percent_completed_story_points",
+            "type": "PERCENT",
+            "display": false
+        }
+    ],
+    "field_pairs": [
+        {"id": "jira_key", "left_field_id": "sheet:Jira Key", "right_field_id": "jira:key", "sor": "RIGHT", "display_index": 5},
+        {"id": "sheet_key", "left_field_id": "sheet:ebIMS#", "right_field_id": "jira:customfield_11405", "sor": "LEFT", "display_index": 2},
+        {"id": "percent_done", "left_field_id": "sheet:Physical % Complete", "right_field_id": "jira_percent_done", "sor": "RIGHT", "display_index": 0},
+        {"id": "baseline_start_date", "left_field_id": "sheet:Baseline Start", "right_field_id": "jira_baseline_start", "sor": "LEFT", "display_index": 8},
+        {"id": "baseline_end_date", "left_field_id": "sheet:Baseline Finish", "right_field_id": "jira_baseline_end", "sor": "LEFT", "display_index": 9},
+        {"id": "actual_start_date", "left_field_id": "sheet:Actual Start", "right_field_id": "jira_actual_start", "sor": "RIGHT", "display_index": 10},
+        {"id": "actual_end_date", "left_field_id": "sheet:Actual Finish", "right_field_id": "jira_actual_end", "sor": "RIGHT", "display_index": 11},
+        {"id": "planned_start_date", "left_field_id": "sheet:Start", "right_field_id": "jira_planned_start", "sor": "RIGHT", "display_index": 12},
+        {"id": "planned_end_date", "left_field_id": "sheet:Finish", "right_field_id": "jira_planned_end", "sor": "RIGHT", "display_index": 13},
+        {"id": "deadline", "left_field_id": "sheet:Deadline", "right_field_id": "jira_dependency", "sor": "RIGHT", "display_index": 14}
+    ],
+    "comparison": {
+        "sort_field_id": "sheet:__row_number",
+        "reverse": false
+    }
+}

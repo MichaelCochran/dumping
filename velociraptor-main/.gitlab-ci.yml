@@ -1,0 +1,227 @@
+variables:
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_DRIVER: overlay2
+  DOCKER_BUILDKIT: 1
+  DOCKER_IMAGE: harbor.global.lmco.com/lmc.eo.swf.lmified/ext.hub.docker.com/library/docker
+  DOCKER_TAG: "20.10.22"
+
+  ENABLE_SEMANTIC_RELEASE_DRY_RUN: 'true'
+  ENABLE_SEMANTIC_RELEASE: 'true'
+  SEMANTIC_RELEASE_BRANCH: 'main'
+  PRODUCTION_BRANCH: 'main'
+
+  ADDITIONAL_PATH: "velociraptor"              # Provide path where scan will start
+  ENFORCE_RELEASE_GATE: "security"    # Valid values: "all,security,codecoverage,duplicatelinedensity,maintainability,reliability"
+  MAIN_BRANCH: "main"               # Audit suppressions and remediated issues are inherited from MAIN_BRANCH. 
+  SCAN_RESULTS_REVIEWERS_NTIDS: "tpaulaki,schifris"    # Comma separated list of NTIDs of employees who need to review scan results.
+  ENABLE_RESULTS_EMAIL: "all"            # Valid values: "self,all,off". Default is "all".
+  FORTIFY_SKIP_TRANSLATION: "false"   # Valid values: "true,false". Default is "false".
+  ENABLE_DOT_NET_SCAN: "false"
+
+  SBOM_SCANNING_ENABLED: "true"     # Enable SBOM scanning
+  SBOM_VALIDATION_ENABLED: "true"   # Validate SBOM (what validation does this even do?)
+  SBOM_RELEASE_ENABLED: "true"     # Push SBOM to repo package registry
+  BOM_RELEASE_IMAGE: "cdn.harbor.global.lmco.com/lmc.eo.swf.lmified/ext.hub.docker.com/alpine/curl"
+  BOM_RELEASE_TAG: "latest"
+  ENABLE_TRACKING: "false"
+  ENABLE_SBOM_VALIDATE: "false"
+  ENABLE_HELM_BOMR: "false"
+
+include:
+  - remote: 'https://pipeline-catalog.global.lmco.com/api/v1/ez-registry/modules/stages/v1.0.10/templates/stages.gitlab-ci.yml'
+  - remote: 'https://pipeline-catalog.global.lmco.com/api/v1/global/modules/semantic-release/v3.1.1/modules/semantic-release.yml'
+  - remote: 'https://pipeline-catalog.global.lmco.com/api/v1/global/modules/semantic-release/v3.1.1/modules/semantic-release-dry-run.yml'
+  - remote: 'https://pipeline-catalog.global.lmco.com/api/v1/us/modules/sast-scans/v4.3.1/pipelines/sast-full.gitlab-ci.yml'
+  - remote: 'https://pipeline-catalog.global.lmco.com/api/v1/ez-registry/modules/sbom/v7.0.29/pipelines/SBOM-Generator.yml'
+
+unit-tests:
+  image: cdn.harbor.global.lmco.com/lmc.eo.swf.internal/python:v2
+  stage: test
+  script:
+    - export PYTHONPATH=.:$PYTHONPATH
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - pytest --junitxml junit.xml --cov=velociraptor --cov-report term --cov-report xml:coverage.xml tests/
+  coverage: /TOTAL.+ ([0-9]{1,3}%)/
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - coverage.xml
+
+
+integration-tests:
+  image: cdn.harbor.global.lmco.com/lmc.eo.swf.internal/python:v2
+  stage: test
+  script:
+    - export PYTHONPATH=.:$PYTHONPATH
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+    - python -m velociraptor.compare_sheet -c config/config_advanced.json -d ./
+
+
+semantic-release:dry-run:
+  rules:
+    - if: '$SEMANTIC_RELEASE_BRANCH == $CI_COMMIT_REF_NAME'
+
+semantic-release:publish:
+  rules:
+    - if: '$SEMANTIC_RELEASE_BRANCH == $CI_COMMIT_REF_NAME'
+
+
+.install_python:
+  before_script:
+    - |
+      set HTTP_PROXY http://proxy-zsgov.external.lmco.com:80/
+      set HTTPS_PROXY http://proxy-zsgov.external.lmco.com:80/
+      set NO_PROXY 127.0.0.1,localhost,.lmco.com,.us.lmco.com,.lmms.lmco.com,.ssc.lmco.com,.gitlab.us.lmco.com,.pages.gitlab.us.lmco.com,.global.lmco.com,.gitlab.global.lmco.com,.pages.gitlab.global.lmco.com,nexus.global.lmco.com
+      set http_proxy http://proxy-zsgov.external.lmco.com:80/
+      set https_proxy http://proxy-zsgov.external.lmco.com:80/
+      set no_proxy 127.0.0.1,localhost,.lmco.com,.us.lmco.com,.lmms.lmco.com,.ssc.lmco.com,.gitlab.us.lmco.com,.pages.gitlab.us.lmco.com,.global.lmco.com,.gitlab.global.lmco.com,.pages.gitlab.global.lmco.com,nexus.global.lmco.com
+
+      $username = $Env:EFOSS_USER
+      $password = $Env:EFOSS_TOKEN
+
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls -bor [Net.SecurityProtocolType]::Tls11 -bor [Net.SecurityProtocolType]::Tls12
+      $code = @"
+      public class SSLHandler
+      {
+          public static System.Net.Security.RemoteCertificateValidationCallback GetSSLHandler()
+          {
+
+              return new System.Net.Security.RemoteCertificateValidationCallback((sender, certificate, chain, policyErrors) => { return true; });
+          }
+          
+      }
+      "@
+
+      #compile the class
+      Add-Type -TypeDefinition $code
+
+      #disable checks using new class
+      [System.Net.ServicePointManager]::ServerCertificateValidationCallback = [SSLHandler]::GetSSLHandler()
+
+      Invoke-WebRequest -Uri "https://crl.external.lmco.com/trust/cerindividual/combined/Lockheed%20Martin%20Certification%20Authority%207%20G2.cer" -OutFile "lm_7_g2.cer"
+      Invoke-WebRequest -Uri http://crl.external.lmco.com/trust/pem/combined/Combined_pem.pem -O Combined_pem.pem
+      Invoke-WebRequest -Proxy "http://proxy-zsgov.external.lmco.com:80" -Uri "https://www.python.org/ftp/python/3.11.2/python-3.11.2-embed-amd64.zip" -O python.zip
+
+      Import-Certificate -FilePath "lm_7_g2.cer" -CertStoreLocation Cert:\LocalMachine\ca
+
+      $url = "https://nexus.global.lmco.com/repository/efoss-raw/python/3.11.2/python3.11.2amd64.exe"
+      $pair = "$($username):$($password)"
+
+      $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair))
+
+      $basicAuthValue = "Basic $encodedCreds"
+
+      $headers = @{
+          Authorization = $basicAuthValue
+      }
+
+      Invoke-WebRequest -Uri $url -OutFile "python-installer.exe" -Headers $headers -UseBasicParsing
+
+    - Start-Process python-installer.exe -ArgumentList '/passive InstallAllUsers=1 PrependPath=1' -Wait
+    - $env:PATH = "$env:PATH;C:\Program Files\Python311;"
+    - Remove-Item python-installer.exe
+    - python.exe -m ensurepip
+    - python.exe -m pip config set global.index-url https://$($env:EFOSS_USER):$($env:EFOSS_TOKEN)@nexus.global.lmco.com/repository/pypi-proxy/simple/
+    - python.exe -m pip config set global.extra-index-url https://$($env:EFOSS_USER):$($env:EFOSS_TOKEN)@nexus.global.lmco.com/repository/swf-pypi/simple/
+  script:
+    echo "Override"
+
+bundle_windows:
+  stage: deploy
+  extends: .install_python
+  script:
+    - New-Item -Path "ag" -ItemType Directory
+    - New-Item -Path "ag\python" -ItemType Directory
+    - Copy-Item -Path .\velociraptor\ -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\config\ -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\data\ -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\examples\ -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\output\ -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\*.bat -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\README.md -Destination .\ag\ -Recurse
+    - Copy-Item -Path .\Combined_pem.pem -Destination .\ag\
+    - Expand-Archive python.zip -DestinationPath ".\ag\python\"
+    - Copy-Item -Path deployment\python311._pth ag\python
+    - New-Item -Path ".\ag\python\lib\site-packages" -ItemType Directory
+    - python.exe -m pip install --trusted-host nexus.global.lmco.com -r requirements.txt --target .\ag\python\Lib\site-packages
+    - cd ag
+    - if ($null -eq $env:RELEASE_VERSION) { $env:RELEASE_VERSION = 'dev' }
+    - Compress-Archive -Path .\* -DestinationPath velociraptor-$($env:RELEASE_VERSION)-airgapped.zip
+  tags:
+    - windows-docker-runner
+  artifacts:
+    paths:
+      - "ag/*.zip"
+
+build-image:
+  variables:
+    DOCKER_BUILD_DIR: .
+    IMAGE_NAME: $CI_REGISTRY_IMAGE
+    IMAGE_TAG: $CI_COMMIT_REF_SLUG
+    HTTP_PRXY: http://proxy-zsgov.external.lmco.com:80
+    HTTPS_PRXY: http://proxy-zsgov.external.lmco.com:80
+    NO_PRXY: ".us.lmco.com,.gitlab.us.lmco.com,.global.lmco.com,.gitlab.global.lmco.com,127.0.0.1,localhost"
+  stage: package
+  before_script:
+    - docker login --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG -f $DOCKER_BUILD_DIR/Dockerfile --build-arg EFOSS_USER=${EFOSS_USER} --build-arg PYPI_USERNAME=${PYPI_USERNAME} --build-arg PYPI_TOKEN=${PYPI_TOKEN} --build-arg EFOSS_TOKEN=${EFOSS_TOKEN} --build-arg http_proxy=${HTTP_PRXY} --build-arg https_proxy=${HTTPS_PRXY} --build-arg no_proxy=${NO_PRXY} .
+  after_script:
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+  tags:
+    - docker-builder
+
+crane:copy:
+  variables:
+    CRANE_IMAGE: "cdn.harbor.global.lmco.com/ext.gcr.io/go-containerregistry/crane/debug"
+    CRANE_TAG: "v0.15.2"
+    CRANE_COPY_OPTS: "--insecure"
+    CRANE_SOURCE_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+    CRANE_SOURCE_REGISTRY: $CI_REGISTRY
+    CRANE_SOURCE_REGISTRY_USER: $CI_REGISTRY_USER
+    CRANE_SOURCE_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    CRANE_DESTINATION_IMAGE: ""
+    CRANE_DESTINATION_IMAGE_TAG: $RELEASE_VERSION
+    CRANE_DESTINATION_REGISTRY: $CI_REGISTRY
+    CRANE_DESTINATION_REGISTRY_USER: $CI_REGISTRY_USER
+    CRANE_DESTINATION_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+  stage: export-artifacts
+  image:
+    name: $CRANE_IMAGE:$CRANE_TAG
+    entrypoint: [""]
+  script:
+    - crane auth login $CRANE_SOURCE_REGISTRY -u $CRANE_SOURCE_REGISTRY_USER -p $CRANE_SOURCE_REGISTRY_PASSWORD
+    - crane auth login $CRANE_DESTINATION_REGISTRY -u $CRANE_DESTINATION_REGISTRY_USER -p $CRANE_DESTINATION_REGISTRY_PASSWORD
+    - crane copy $CRANE_SOURCE_IMAGE $CRANE_DESTINATION_IMAGE:$CRANE_DESTINATION_IMAGE_TAG $CRANE_COPY_OPTS
+  rules:
+    - if: "$SEMANTIC_RELEASE_BRANCH == $CI_COMMIT_REF_NAME"
+
+sbom-publish:
+  extends: sbom_release
+  image: $BOM_RELEASE_IMAGE:$BOM_RELEASE_TAG
+  stage: export-artifacts
+  variables:
+      BOM_PATTERN: "*bom*.json"
+  before_script:
+    - ls -la
+    - echo
+  script:
+      - >
+        for file in $(find . -type f -name "$BOM_PATTERN"); do
+
+          echo "$file";
+          curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$file" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${CI_PROJECT_NAME}/${RELEASE_VERSION}/";
+        done
+
+  rules:
+      - if: '$SBOM_RELEASE_ENABLED == "true" && $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'

@@ -6,7 +6,7 @@ Get started with the C++ SBOM Generator in minutes!
 
 ```powershell
 # Navigate to the tool directory
-cd c:\Users\e480545\sbom
+cd ~\sbom
 
 # Install Python dependencies
 pip install -r requirements.txt

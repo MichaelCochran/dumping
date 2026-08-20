@@ -1,0 +1,4 @@
+__pycache__
+.venv/
+.vscode/
+run_compare_sheet -*.bat

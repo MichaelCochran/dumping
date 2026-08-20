@@ -1,0 +1,36 @@
+---
+branches:
+  - main
+plugins:
+  - - '@semantic-release/commit-analyzer'
+    - preset: conventionalcommits
+      releaseRules:
+        - type: release
+          release: major
+        - type: docs
+          release: patch
+        - type: refactor
+          release: patch
+        - type: style
+          release: patch
+        - type: bug
+          release: patch
+      parserOpts:
+        noteKeywords:
+          - BREAKING CHANGE
+          - BREAKING CHANGES
+  - - '@semantic-release/release-notes-generator'
+    - preset: conventionalcommits
+  - - '@semantic-release/changelog'
+    - changelogFile: docs/CHANGELOG.md
+  - - '@semantic-release/git'
+    - assets:
+        - docs/CHANGELOG.md
+  - - '@semantic-release/gitlab'
+    - gitlabUrl: https://gitlab.us.lmco.com
+      gitlabApiPathPrefix: '/api/v4'
+      assets:
+        - path: dist/velociraptor-*.zip
+          label: Windows Velociraptor
+        - path: ag/velociraptor-*.zip
+          label: Windows Velociraptor (Airgapped)
