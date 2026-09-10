@@ -1,7 +1,4 @@
-import csv
-import getpass
 import glob
-import hashlib
 import json
 import logging
 import os
@@ -13,7 +10,6 @@ import xml.etree.ElementTree as ET
 from datetime import date
 from enum import Enum
 from os import environ
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -27,14 +23,11 @@ pd.options.mode.chained_assignment = None
 
 environ['PYTHONIOENCODING'] = 'utf-8'
 URL = 'url.to.fortify.server'
-USER_NAME = getpass.getuser()
-DESCRIPTION = f'{USER_NAME} FortifyApi Token'
 FILE_TOKEN_TYPE = {'fileTokenType': 'REPORT_FILE'}
 DATE = date.today().isoformat()
 logging.basicConfig(level=logging.INFO)
 global PASSWORD
 global TOKEN
-ISSUE_DICT = {}
 
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
@@ -48,8 +41,6 @@ integrationPath = 'integration_reports'
 featurePath = 'feature_reports'
 commonPath = 'common_report'
 
-MANIFEST_NAME = 'manifest.csv'
-
 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
 
@@ -59,25 +50,19 @@ class FortifyApiExt(FortifyApi):
         url = '/api/v1/dataExports/action/exportAuditToCsv'
         return self._request('POST', url, json=payload)
 
-    def is_token_valid(file_token):
-        return file_token.get('status') == 'ready'
-
     def download_export_audit(self, srcFileName):
         exports = self._request('GET', '/api/v1/dataExports')
 
         if not exports.success:
             raise RuntimeError(f"Failed to get list of exports: {srcFileName}: {exports.message}")
-            return None
 
         data = exports.data.get('data', [])
         if not data:
             raise ValueError("No data returned from data exports list...\nQuitting...")
-            return None
 
         ids = [item['id'] for item in data if 'id' in item]
         fileNames = [item['fileName'] for item in data if 'fileName' in item]
         fileName_to_id = dict(zip(fileNames, ids))
-        status = None
         export_status = None
 
         export_id = fileName_to_id.get(srcFileName)
@@ -85,7 +70,6 @@ class FortifyApiExt(FortifyApi):
         file_token_packet = self._request('POST', 'api/v1/fileTokens', json=FILE_TOKEN_TYPE)
         if (file_token_packet.data['responseCode'] != 201):
             raise RequestException("Unable to request file token...")
-            return None
 
         file_token = file_token_packet.data['data']['token']
         logging.debug(f'{srcFileName} file token is: {file_token}')
@@ -104,7 +88,6 @@ class FortifyApiExt(FortifyApi):
         resp = self._request('GET', download_url, stream=True)
         if not resp.success:
             raise RuntimeError(f"Failed to download export {export_id}: {resp.message}")
-            return None
         else:
             file_content = resp.data
 
@@ -160,11 +143,8 @@ def create_data_export(api_instance, fileName, VersionId):
         response = api_instance.export_audit_to_csv(payload=data)
         if response.success:
             break
-        if not response.success:
+        if i == 2:
             raise RuntimeError(f"Export request failed for {fileName}: {response.message}")
-            if i == 3:
-                print("Quitting...")
-                quit()
 
 
 def empty_dir(dir_name):
@@ -317,7 +297,6 @@ def createDF_func(fileDirectory, branchType, hasComments):
                     featDF = featDF.drop_duplicates(subset=['CWE', 'Line Number', 'Primary Location'])
 
                 return featDF
-                break
         if not 'featReportPath' in globals():
             print(f"{RED}No Source file in {repoTag1} found. Please download data export from Fortify.\nQuitting...{ENDCOLOR}")
             exit()
@@ -388,11 +367,11 @@ def createReport():
         reviewDF.to_excel(writer, sheet_name="Review Branch Report")
         integrationDF.to_excel(writer, sheet_name="Integration Branch Report")
 
-    formatReport(reportName)
+    formatReport()
     return True
 
 
-def formatReport(report):
+def formatReport():
     writer = pd.ExcelWriter(reportName, engine='openpyxl', mode='a')
     workbook = writer.book
     sheets = workbook.sheetnames
@@ -444,7 +423,6 @@ def formatReport(report):
         numCols = ws.max_column
         numRows = ws.max_row
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=numCols)
-        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=numCols)
         ws.merge_cells(start_row=numRows + 1, start_column=1, end_row=numRows + 1, end_column=numCols)
         ws.merge_cells(start_row=numRows + 2, start_column=1, end_row=numRows + 2, end_column=numCols)
 
@@ -460,15 +438,6 @@ def formatReport(report):
     writer.close()
 
 
-def get_filename(full_path: str) -> str:
-    slash_pos = full_path.rfind('/')
-    backslash_pos = full_path.rfind('\\')
-    sep_index = max(slash_pos, backslash_pos)
-    file_name = full_path[sep_index + 1:] if sep_index != -1 else full_path
-    print(f"{file_name} found")
-    return file_name
-
-
 def archiveRptFiles():
     # TODO Use a single temporary folder instead of the archive directory setup below
 
@@ -477,7 +446,6 @@ def archiveRptFiles():
 
     global fullDir
     fullDir = archiveParentDir + archiveSubDir
-    old_manifest = readManifest(fullDir)
 
     try:
         os.makedirs(fullDir)
@@ -537,31 +505,11 @@ def trackFindings():
     sumDF = sumDF.sort_values(by=['Full Filename', 'Category'])
 
     finalCount = 0
-    for index, row in sumDF.iterrows():
+    for _, row in sumDF.iterrows():
         finalCount + row['Count']
         print(str(row['Count']) + "" + row['Category'] + " Finding(s) in " + row['Primary Location'])
 
         print(str(finalCount) + " New Findings")
-
-
-def _hash_file(p: str) -> str:
-    if os.path.isfile(p):
-        h = hashlib.sha256()
-        with open(p, 'rb') as f:
-            for chunk in iter(lambda: f.read(8192), b''):
-                h.update(chunk)
-        return h.hexdigest()
-    return ''
-
-
-def readManifest(report_dir: Path) -> dict:
-    manifest_path = os.path.join(report_dir, MANIFEST_NAME)
-    data = {}
-    if os.path.isfile(manifest_path):
-        with open(manifest_path, mode='r', newline='', encoding='utf8') as f:
-            for name, h in csv.reader(f):
-                data[name] = h
-    return data
 
 
 def configureEnum():
