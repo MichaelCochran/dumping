@@ -445,7 +445,7 @@ def download_report(fileName, save_dir, api_instance, versionId branch_type):
         
         enumRepo = enum.Enum('enumRepo', repo_data)
 
-        return config
+        return enumRepo
 
 
 

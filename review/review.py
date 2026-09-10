@@ -53,10 +53,6 @@ from enum import Enum
 pd.options.mode.chained_assignment = None
 
 
-
-
-
-
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
 RED = '\033[91m'
@@ -70,16 +66,6 @@ os.system("")
 integrationPath = 'integration_reports'
 featurePath = 'feature_reports'
 commonPath = 'common_report'
-
-
-
-
-MAX_BACKUPS = 5
-MANIFEST_NAME = 'manifest.csv'
-
-
-
-
 
 
 thin_border = Border(left = Side(style = 'thin'), right = Side(style = 'thin'), top = Side(style = 'thin'), bottom = Side(style = 'thin'))
@@ -136,7 +122,7 @@ def alignXlsCells(sheetName, colList, horizontal, vertical, wrap, border):
 
 
 
-def createDF_func(fileDirectory, branchType):
+def createDF_func(fileDirectory, branchType, hasComments):
 
 
 
@@ -154,35 +140,35 @@ def createDF_func(fileDirectory, branchType):
                 global integrationReportPath
                 integrationReportPath = integrationPath + '/' + f1
                 if hasComments:
-                    integrationDF = pd.read_csv(integrationReportPath, usecols = ['Category', 'Full Filename', 'Line Number', 'CWE', 'Tagged', 'Criticality', 'Primary Location', 'Instance ID'])
-                    
-                    
-                    integrationDF = integrationDF.sort_values(by = ['Full Filename', 'Line Number'])
+                    integrationDF = pd.read_csv(integrationReportPath, usecols = ['Category', 
+                    'Full Filename', 'Line Number', 'CWE', 'Tagged', 'Criticality', 
+                    'Primary Location', 'Instance ID', 'Comment'])                    
+                    integrationDF = integrationDF.loc[:, ['Category', 'CWE', 'Line Number', 
+                    'Primary Location', 'Tagged', 'Criticality', 'Comment', 'Full Filename', 'Instance ID']]
                 else:
-                    integrationDF = pd.read_csv(integrationReportPath, usecols = ['Category', 'Full Filename', 'Line Number', 'CWE', 'Tagged', 'Criticality', 'Primary Location', 'Instance ID'])
-                    integrationDF = integrationDF.loc[:, ['Category', 'Full Filename', 'Line Number', 'CWE', 'Tagged', 'Criticality', 'Primary Location', 'Instance ID']]
+                    integrationDF = pd.read_csv(integrationReportPath, usecols = ['Category', 
+                    'Full Filename', 'Line Number', 'CWE', 'Tagged', 'Criticality', 
+                    'Primary Location', 'Instance ID'])
+                    integrationDF = integrationDF.loc[:, ['Category', 'CWE', 'Line Number', 
+                    'Primary Location', 'Tagged', 'Criticality', 'Full Filename', 'Instance ID']]
                
                 integrationDF = integrationDF.sort_values(by=['Full Filename', 'Line Number'])
+                
                 integrationDF['CWE'] = integrationDF['CWE'].str.split(',').str[0]
+
 
                 integrationDF = integrationDF.reset_index(drop = True)
                 integrationDF = integrationDF.drop_duplicates(subset = ['CWE', 'Line Number', 'Primary Location'])
                 return integrationDF
-
         if not 'integrationReportPath' in globals():
             print(f"{RED} No integration file in {repoTag1} found. Please download and export. Try again. {ENDCOLOR}")
             
             return
         
-    
-    
-    
-    
-    
     elif branchType == 'feature':
         for f2 in featureFiles:
             if repoTag1 in f2:
-                if not (re.match(r"\S{3,}_\d{4}-\d{2}\.csv$", f2)):
+                if not (re.match(r"\S{3,}_\d{4}-\d{2}\d{2}\.csv$", f2)):
                     print(f"{RED}Format of source file is incorrect.{ENDCOLOR}")
                     exit()
 
@@ -204,11 +190,12 @@ def createDF_func(fileDirectory, branchType):
 
 
                 else:
-                    featDF = pd.read_csv(f2, usecols = ['Category', 'Full Filename', 'Line Number', 'Criticality', 'CWE', 'Tagged', 'Primary Location', 'Instance ID'])
+                    featDF = pd.read_csv(f2, usecols = ['Category', 'Full Filename', 'Line Number',
+                     'Criticality', 'CWE', 'Tagged', 'Primary Location', 'Instance ID'])
                 
                 
-                
-                featDF = featDF.drop_duplicates(subset = ['Category', 'CWE', 'Primary Location', 'Line Number', 'Criticality'])
+                featDF = featDF.drop_duplicates(subset = ['Category', 'CWE', 'Primary Location', 
+                'Line Number', 'Criticality'])
                 
                 featDF = featDF.rename(columns = {'Criticality': 'Fortify Criticality'})
 
@@ -297,7 +284,7 @@ def createReport():
     key_match = feat_key_series.isin(integration_key_set)
 
 
-    tagged = (reviewDF['Tagged']notna() & reviewDF['Tagged'].astype(str).str.strip().ne(''))
+    tagged = (reviewDF['Tagged'].notna() & reviewDF['Tagged'].astype(str).str.strip().ne(''))
 
 
     reviewDF['Preexisting Backlog'] = id_match | key_match | tagged
@@ -350,10 +337,10 @@ def createReport():
     
     with pd.ExcelWriter(reportName, mode = 'w') as writer:
     
-        integrationDF.to_excel(writer, sheet_name = 'integration Branch Report')
         reviewDF.to_excel(writer, sheet_name = 'Review Branch Report')
+        integrationDF.to_excel(writer, sheet_name = 'Integration Branch Report')
 
-    
+
     
     formatReport(reportName)
     return True
@@ -443,14 +430,14 @@ def formatReport(report):
         ws.merge_cells(start_row = numRows + 2, start_column = 1, end_row = numRows + 2, end_column = numCols)
 
 
-        ws['A1'] = 'SECRET'
+        ws['A1'] = "Don't Speak"
         ws['A1'].font = Font(name = 'Times New Roman', size = 10, color = 'DC143C')
         ws['A1'].alignment = Alignment(horizontal = 'center')
 
 
 
         footercell = 'A' + str(numRows + 1)
-        ws[footerCell] = 'SECRET'
+        ws[footerCell] = "Don't Speak"
         ws[footerCell].font = Font(name = 'Times New Roman', size = 10, color = 'DC143C')
         ws[footerCell].alignment = Alignment(horizontal = 'center')
 
@@ -499,7 +486,7 @@ def archiveRptFiles():
     archiveParentDir = f'archive/{repoTag1}'
 
 
-    archiveSubDir = collabReview + '_' workingFeatFile[:-4] + '/'
+    archiveSubDir = collabReview + '_' + workingFeatFile[:-4] + '/'
 
     global fullDir
     fullDir = archiveParentDir + archiveSubDir
@@ -523,8 +510,6 @@ def archiveRptFiles():
 
 
 
-
-
     for entry in srcFiles:
         src = entry['src']
         dst = os.path.join(fullDir, os.path.basename(src))
@@ -536,27 +521,7 @@ def archiveRptFiles():
         except PermissionError:
             return False
         
-    return True:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return True
 
 
 
@@ -625,68 +590,32 @@ def trackFindings():
 
 
 
+def _hash_file(p: str) -> str:
+    
+    if os.path.isfile(p):
+        h = hashlib.sha256()
+        with open(p, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    return ''
 
+def configureEnum():
+    
+    
+    
+    
+    
+    
+    with open('repoConfig.json', 'r') as f:
+        config = json.load(f)
+    
+    enumRepo = enum.Enum('enumRepo', repo_data)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def readManifest(report_dir: Path) -> dict:
-    manifest_path = os.path.join(report_dir, MANIFEST_NAME)
-    data = {}
-    if os.path.isfile(manifest_path):
-        with open(manifest_path, mode = 'r', newline = '', encoding = 'utf8') as f:
-            for name, h in csv.reader(f):
-                data[name] = h
-    return data
-
-class RepoTag(enum):
-    MSV_FSW = 1
-    MSV_PTS = 2
-    MSV_NGC = 3
-    MSV_EM = 4
-    KV_FSW = 5
-    KV_NGC = 6
-    VMC = 7
-    NGICON = 8
-    COMMON_FSW = 9
-    COMMON_ALGO = 10
-    HS = 11
-    HSP = 12
-    PP = 13
-    RS = 14
-    NGISIM = 15
-
-
-
-
+    return enumRepo
 
 if __name__ == '__main__':
+    enumRepo = configureEnum()
     global repoTag1
     hasComments = False
     repoSet = False
@@ -731,6 +660,7 @@ if __name__ == '__main__':
             if createReport(hasComments):
                 break
 
+        
         if archiveRptFiles():
             break
         else:
