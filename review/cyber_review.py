@@ -55,12 +55,10 @@ class FortifyApiExt(FortifyApi):
 
         if not exports.success:
             raise RuntimeError(f"Failed to get list of exports: {srcFileName}: {exports.message}")
-            return None
 
         data = exports.data.get('data', [])
         if not data:
             raise ValueError("No data returned from data exports list...\nQuitting...")
-            return None
 
         ids = [item['id'] for item in data if 'id' in item]
         fileNames = [item['fileName'] for item in data if 'fileName' in item]
@@ -72,7 +70,6 @@ class FortifyApiExt(FortifyApi):
         file_token_packet = self._request('POST', 'api/v1/fileTokens', json=FILE_TOKEN_TYPE)
         if (file_token_packet.data['responseCode'] != 201):
             raise RequestException("Unable to request file token...")
-            return None
 
         file_token = file_token_packet.data['data']['token']
         logging.debug(f'{srcFileName} file token is: {file_token}')
@@ -91,7 +88,6 @@ class FortifyApiExt(FortifyApi):
         resp = self._request('GET', download_url, stream=True)
         if not resp.success:
             raise RuntimeError(f"Failed to download export {export_id}: {resp.message}")
-            return None
         else:
             file_content = resp.data
 
@@ -147,11 +143,8 @@ def create_data_export(api_instance, fileName, VersionId):
         response = api_instance.export_audit_to_csv(payload=data)
         if response.success:
             break
-        if not response.success:
+        if i == 2:
             raise RuntimeError(f"Export request failed for {fileName}: {response.message}")
-            if i == 3:
-                print("Quitting...")
-                quit()
 
 
 def empty_dir(dir_name):
@@ -304,7 +297,6 @@ def createDF_func(fileDirectory, branchType, hasComments):
                     featDF = featDF.drop_duplicates(subset=['CWE', 'Line Number', 'Primary Location'])
 
                 return featDF
-                break
         if not 'featReportPath' in globals():
             print(f"{RED}No Source file in {repoTag1} found. Please download data export from Fortify.\nQuitting...{ENDCOLOR}")
             exit()
