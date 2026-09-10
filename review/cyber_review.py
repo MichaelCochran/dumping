@@ -28,7 +28,6 @@ DATE = date.today().isoformat()
 logging.basicConfig(level=logging.INFO)
 global PASSWORD
 global TOKEN
-ISSUE_DICT = {}
 
 GREEN = '\033[92m'
 YELLOW = '\033[93m'
@@ -50,9 +49,6 @@ class FortifyApiExt(FortifyApi):
     def export_audit_to_csv(self, payload):
         url = '/api/v1/dataExports/action/exportAuditToCsv'
         return self._request('POST', url, json=payload)
-
-    def is_token_valid(file_token):
-        return file_token.get('status') == 'ready'
 
     def download_export_audit(self, srcFileName):
         exports = self._request('GET', '/api/v1/dataExports')
@@ -379,11 +375,11 @@ def createReport():
         reviewDF.to_excel(writer, sheet_name="Review Branch Report")
         integrationDF.to_excel(writer, sheet_name="Integration Branch Report")
 
-    formatReport(reportName)
+    formatReport()
     return True
 
 
-def formatReport(report):
+def formatReport():
     writer = pd.ExcelWriter(reportName, engine='openpyxl', mode='a')
     workbook = writer.book
     sheets = workbook.sheetnames
@@ -434,7 +430,6 @@ def formatReport(report):
         ws.insert_rows(0)
         numCols = ws.max_column
         numRows = ws.max_row
-        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=numCols)
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=numCols)
         ws.merge_cells(start_row=numRows + 1, start_column=1, end_row=numRows + 1, end_column=numCols)
         ws.merge_cells(start_row=numRows + 2, start_column=1, end_row=numRows + 2, end_column=numCols)
