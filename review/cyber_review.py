@@ -1,7 +1,5 @@
 import csv
-import getpass
 import glob
-import hashlib
 import json
 import logging
 import os
@@ -27,8 +25,6 @@ pd.options.mode.chained_assignment = None
 
 environ['PYTHONIOENCODING'] = 'utf-8'
 URL = 'url.to.fortify.server'
-USER_NAME = getpass.getuser()
-DESCRIPTION = f'{USER_NAME} FortifyApi Token'
 FILE_TOKEN_TYPE = {'fileTokenType': 'REPORT_FILE'}
 DATE = date.today().isoformat()
 logging.basicConfig(level=logging.INFO)
@@ -460,15 +456,6 @@ def formatReport(report):
     writer.close()
 
 
-def get_filename(full_path: str) -> str:
-    slash_pos = full_path.rfind('/')
-    backslash_pos = full_path.rfind('\\')
-    sep_index = max(slash_pos, backslash_pos)
-    file_name = full_path[sep_index + 1:] if sep_index != -1 else full_path
-    print(f"{file_name} found")
-    return file_name
-
-
 def archiveRptFiles():
     # TODO Use a single temporary folder instead of the archive directory setup below
 
@@ -542,16 +529,6 @@ def trackFindings():
         print(str(row['Count']) + "" + row['Category'] + " Finding(s) in " + row['Primary Location'])
 
         print(str(finalCount) + " New Findings")
-
-
-def _hash_file(p: str) -> str:
-    if os.path.isfile(p):
-        h = hashlib.sha256()
-        with open(p, 'rb') as f:
-            for chunk in iter(lambda: f.read(8192), b''):
-                h.update(chunk)
-        return h.hexdigest()
-    return ''
 
 
 def readManifest(report_dir: Path) -> dict:
