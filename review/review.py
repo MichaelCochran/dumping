@@ -7,6 +7,9 @@ import re
 import hashlib
 import csv
 import sys
+import json
+import openpyxl
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from openpyxl.styles import Alignment
 from openpyxl.styles import PatternFill
@@ -66,6 +69,9 @@ os.system("")
 integrationPath = 'integration_reports'
 featurePath = 'feature_reports'
 commonPath = 'common_report'
+
+
+MANIFEST_NAME = 'manifest.csv'
 
 
 thin_border = Border(left = Side(style = 'thin'), right = Side(style = 'thin'), top = Side(style = 'thin'), bottom = Side(style = 'thin'))
@@ -256,19 +262,19 @@ def createReport():
 
 
     integrationFiles = os.listdir(integrationPath)
-    integrationDF = createDF_func(integrationFiles, 'integration')
+    integrationDF = createDF_func(integrationFiles, 'integration', hasComments)
     if integrationDF is None:
         return False
-    
+
     whitelistDF = integrationDF[(integrationDF['Tagged'] == 'Whitelist NOMINATED')| (integrationDF['Tagged'] == 'Whitelist APPROVED')]
 
 
 
     global featureFiles
     globoPath = featurePath + '/*'
-    featureFiles = glob.glob(globPath)
+    featureFiles = glob.glob(globoPath)
     featureFiles.sort(key = os.path.getmtime, reverse = True)
-    featDF = createDF_func(featureFiles, 'feature')
+    featDF = createDF_func(featureFiles, 'feature', hasComments)
 
 
 
@@ -280,7 +286,7 @@ def createReport():
 
 
     integration_key_set = set(integrationDF[['Primary Location', 'Line Number', 'Category']].apply(tuple, axis = 1))
-    feat_key_series = featDF[['Primary Location', 'Line Number', 'Category']].apply(tuple, axis = 1))
+    feat_key_series = featDF[['Primary Location', 'Line Number', 'Category']].apply(tuple, axis = 1)
     key_match = feat_key_series.isin(integration_key_set)
 
 
@@ -591,7 +597,7 @@ def trackFindings():
 
 
 def _hash_file(p: str) -> str:
-    
+
     if os.path.isfile(p):
         h = hashlib.sha256()
         with open(p, 'rb') as f:
@@ -600,17 +606,26 @@ def _hash_file(p: str) -> str:
         return h.hexdigest()
     return ''
 
+def readManifest(report_dir: Path) -> dict:
+    manifest_path = os.path.join(report_dir, MANIFEST_NAME)
+    data = {}
+    if os.path.isfile(manifest_path):
+        with open(manifest_path, mode = 'r', newline = '', encoding = 'utf8') as f:
+            for name, h in csv.reader(f):
+                data[name] = h
+    return data
+
 def configureEnum():
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     with open('repoConfig.json', 'r') as f:
         config = json.load(f)
-    
-    enumRepo = enum.Enum('enumRepo', repo_data)
+
+    enumRepo = Enum('enumRepo', config)
 
     return enumRepo
 
@@ -622,7 +637,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         hasComments = True
         repoSet = True
-        RepoTag1 = sys.argv[1]
+        repoTag1 = sys.argv[1]
     else:
         comments = input('\nDo your reports have comments? (Y/N) ')
         while True:
@@ -641,23 +656,23 @@ if __name__ == '__main__':
             if repoSet == False:
                 while True:
                     try:
-                        for tag in RepoTag:
-                            print('f{tag.value} - {tag.name.lower()}')
+                        for tag in enumRepo:
+                            print(f'{tag.value} - {tag.name.lower()}')
 
                         userInput = int(input('Please enter a number: '))
-                        if userInput < 1 or userInput > 15:
+                        if userInput < 1 or userInput > len(enumRepo):
                             raise ValueError
                         else:
-                            RepoTag1 = RepoTag(userInput).name.lower()
+                            repoTag1 = enumRepo(userInput).name.lower()
                             for ch in ('\\', '/', '_'):
-                                RepoTag1 = repoTag1.replace(ch, '-')
-                                break
+                                repoTag1 = repoTag1.replace(ch, '-')
+                            break
                     except ValueError:
                         print(f'{RED}Please enter a valid number!{ENDCOLOR}')
 
             global collabReview
             collabReview = input('Input the Collaborator Review #: ')
-            if createReport(hasComments):
+            if createReport():
                 break
 
         

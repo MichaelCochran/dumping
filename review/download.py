@@ -4,6 +4,7 @@ import time
 import logging
 import sys
 import subprocess
+import json
 from os import environ
 from datetime import date
 import pandas as pd
@@ -246,7 +247,7 @@ def get_project_id(repo, branch):
     for version in data:
         if (version['project']['name'].lower() == repo and version['name'].lower() == branch):
             project_version = version['id']
-            return product_version
+            return project_version
         
     print("Project not found...\nExiting...")
     quit()
@@ -390,10 +391,11 @@ def get_comment_request(api_instance, issueId):
 
 
 
-def download_report(fileName, save_dir, api_instance, versionId branch_type):
-    os.mkdirs(save_dirm exist_ok = True)
+def download_report(fileName, save_dir, api_instance, versionId, branch_type):
+    os.makedirs(save_dir, exist_ok = True)
 
-    file_content = create_report(api_instance, fileName, versionId)
+    create_data_export(api_instance, fileName, versionId)
+    file_content = api_instance.download_export_audit(fileName)
     dest_path = os.path.abspath(os.path.join(save_dir, fileName))
     empty_dir(save_dir)
     with open(dest_path, 'wb') as f:
@@ -432,49 +434,44 @@ def download_report(fileName, save_dir, api_instance, versionId branch_type):
     mergedDF = mergedDF.sort_values(by='Criticality', ignore_index=True)
 
     mergedDF.to_csv(dest_path, index=False)
-    
-    def configureEnum():
-        
-        
-        
-        
-        
-        
-        with open('repoConfig.json', 'r') as f:
-            config = json.load(f)
-        
-        enumRepo = enum.Enum('enumRepo', repo_data)
 
-        return enumRepo
+
+def configureEnum():
+    with open('repoConfig.json', 'r') as f:
+        config = json.load(f)
+
+    enumRepo = Enum('enumRepo', config)
+
+    return enumRepo
 
 
 
 
 if __name__ == '__main__':
     enumRepo = configureEnum()
-    global RepoTag1
+    global repoTag1
     while True:
         try:
             print('')
             for tag in enumRepo:
-                print(f'\n{tag.value} - {tag.name.lower()}')  
-                
+                print(f'\n{tag.value} - {tag.name.lower()}')
+
             repo = int(input("Please enter a number: "))
             if int(repo) < 1 or int(repo) > len(enumRepo):
                 raise ValueError
             else:
-                RepoTag1 = enumRepo(repo).name.lower()
+                repoTag1 = enumRepo(repo).name.lower()
                 for ch in ('\\', '/', '_'):
-                    RepoTag1 = repoTag1.replace(ch, '-')
+                    repoTag1 = repoTag1.replace(ch, '-')
                 break
         except ValueError:
             print(f'{RED}Please enter a valid number!{ENDCOLOR}')
-    
+
 
 
     branch = input("Please paste the branch name: ")
 
-    
+
     repo = repoTag1.replace('-', '_')
     for ch in ('\\', '/', '_'):
         branch = branch.replace(ch, '-')
@@ -503,5 +500,5 @@ if __name__ == '__main__':
     try:
         run_codeReview_script()
     except Exception as exc:
-        print(f"Error while attempting to run codReview.py: {exc}", file = sys, stderr)
+        print(f"Error while attempting to run codReview.py: {exc}", file = sys.stderr)
         sys.exit(1)
