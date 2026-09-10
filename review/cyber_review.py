@@ -1,4 +1,3 @@
-import csv
 import glob
 import json
 import logging
@@ -11,7 +10,6 @@ import xml.etree.ElementTree as ET
 from datetime import date
 from enum import Enum
 from os import environ
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -44,8 +42,6 @@ integrationPath = 'integration_reports'
 featurePath = 'feature_reports'
 commonPath = 'common_report'
 
-MANIFEST_NAME = 'manifest.csv'
-
 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
 
@@ -73,7 +69,6 @@ class FortifyApiExt(FortifyApi):
         ids = [item['id'] for item in data if 'id' in item]
         fileNames = [item['fileName'] for item in data if 'fileName' in item]
         fileName_to_id = dict(zip(fileNames, ids))
-        status = None
         export_status = None
 
         export_id = fileName_to_id.get(srcFileName)
@@ -464,7 +459,6 @@ def archiveRptFiles():
 
     global fullDir
     fullDir = archiveParentDir + archiveSubDir
-    old_manifest = readManifest(fullDir)
 
     try:
         os.makedirs(fullDir)
@@ -524,21 +518,11 @@ def trackFindings():
     sumDF = sumDF.sort_values(by=['Full Filename', 'Category'])
 
     finalCount = 0
-    for index, row in sumDF.iterrows():
+    for _, row in sumDF.iterrows():
         finalCount + row['Count']
         print(str(row['Count']) + "" + row['Category'] + " Finding(s) in " + row['Primary Location'])
 
         print(str(finalCount) + " New Findings")
-
-
-def readManifest(report_dir: Path) -> dict:
-    manifest_path = os.path.join(report_dir, MANIFEST_NAME)
-    data = {}
-    if os.path.isfile(manifest_path):
-        with open(manifest_path, mode='r', newline='', encoding='utf8') as f:
-            for name, h in csv.reader(f):
-                data[name] = h
-    return data
 
 
 def configureEnum():
