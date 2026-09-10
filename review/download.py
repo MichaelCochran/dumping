@@ -52,7 +52,7 @@ FILE_TOKEN_TYPE = ({"fileTokenType": "REPORT_FILE"})
 DATE = date.today().isoformat()
 logging.basicConfig(level = logging.INFO)
 FEATURE_SAVE_DIR = "feature_reports"
-integration_SAVE_DIR = "integration_reports"
+INTEGRATION_SAVE_DIR = "integration_reports"
 global PASSWORD
 global TOKEN
 ISSUE_DICT = {}
@@ -108,6 +108,7 @@ class FortifyApiExt(FortifyApi):
     def is_token_valid(file_token):
         return file_token.get("status") == "ready"
     
+
 
 
 
@@ -239,6 +240,7 @@ def api():
 
 def get_project_id(repo, branch):
     response = api().get_all_project_versions()
+    # TODO add error handling to all api calls
     data = response.data['data']
 
     for version in data:
@@ -388,39 +390,80 @@ def get_comment_request(api_instance, issueId):
 
 
 
-class RepoTag(enum):
-    MSV_FSW = 1
-    MSV_PTS = 2
-    MSV_NGC = 3
-    MSV_EM = 4
-    KV_FSW = 5
-    KV_NGC = 6
-    VMC = 7
-    NGICON = 8
-    COMMON_FSW = 9
-    COMMON_ALGO = 10
-    HS = 11
-    HSP = 12
-    PP = 13
-    RS = 14
-    NGISIM = 15
+def download_report(fileName, save_dir, api_instance, versionId branch_type):
+    os.mkdirs(save_dirm exist_ok = True)
+
+    file_content = create_report(api_instance, fileName, versionId)
+    dest_path = os.path.abspath(os.path.join(save_dir, fileName))
+    empty_dir(save_dir)
+    with open(dest_path, 'wb') as f:
+        f.write(file_content)
+        print(f"Successfully completed CSV download: {dest_path}")
+
+    ISSUE_DICT = get_issue_request(api_instance, versionId)
+    
+    findingsDataFrame = pd.read_csv(dest_path)
+
+    
+    trueRows = findingsDataFrame[findingsDataFrame['Has Comment']].copy()
+    trueRows['IssueID'] = trueRows['Instance ID'].map(ISSUE_DICT)
+    matches = trueRows[trueRows['IssueID'].notna()]
+    
+
+    comments = []
+    for _, row in tqdm(matches.iterrows(), total=len(matches), desc=f"Fetching comments for {branch_type}", unit='row'):
+        issue_id = row['IssueID']
+        comment = get_comment_request(api_instance, issue_id)
+        comments.append(comment)
+
+    matches['Comment'] = comments
+
+
+    overlap = set(findingsDataFrame.columns).intersection(matches.columns) - {'Instance ID'}
+    matches_no_dupe = matches.drop(columns = overlap)
+
+    mergedDF = pd.merge(findingsDataFrame, matches_no_dupe, on='Instance ID', how='outer')
+
+    mergedDF = mergedDF.drop(columns = 'IssueID')
+    importantCols = ['Application', 'Application Version', 'Category', 'CWE', 'Primary Location', 'Line Number', 'Criticality', 'Tagged', 'Comment', 'Found Date']
+    full_order = importantCols + [col for col in mergedDF.columns if col not in importantCols]
+    
+    mergedDF = mergedDF.reindex(columns = full_order)
+    mergedDF = mergedDF.sort_values(by='Criticality', ignore_index=True)
+
+    mergedDF.to_csv(dest_path, index=False)
+    
+    def configureEnum():
+        
+        
+        
+        
+        
+        
+        with open('repoConfig.json', 'r') as f:
+            config = json.load(f)
+        
+        enumRepo = enum.Enum('enumRepo', repo_data)
+
+        return config
 
 
 
 
 if __name__ == '__main__':
+    enumRepo = configureEnum()
     global RepoTag1
     while True:
         try:
-            
-            for tag in RepoTag:
+            print('')
+            for tag in enumRepo:
                 print(f'\n{tag.value} - {tag.name.lower()}')  
                 
             repo = int(input("Please enter a number: "))
-            if repo < 1 or userInput > 15:
+            if int(repo) < 1 or int(repo) > len(enumRepo):
                 raise ValueError
             else:
-                RepoTag1 = RepoTag(userInput).name.lower()
+                RepoTag1 = enumRepo(repo).name.lower()
                 for ch in ('\\', '/', '_'):
                     RepoTag1 = repoTag1.replace(ch, '-')
                 break
@@ -431,15 +474,15 @@ if __name__ == '__main__':
 
     branch = input("Please paste the branch name: ")
 
-    repo.repo.replace('-', '_')
+    
+    repo = repoTag1.replace('-', '_')
     for ch in ('\\', '/', '_'):
         branch = branch.replace(ch, '-')
     repo = repo.lower().strip()
     branch = branch.lower().strip()
 
     
-    
-    input(f'Searching for {branch} in {repo}. Press Enter to continue...')
+    print(f'Searching for {branch} in {repo}.')
 
     
     featureVersionId = get_project_id(repo, branch)
@@ -453,61 +496,9 @@ if __name__ == '__main__':
     
     api_instance = api()
 
-    
-    os.makedirs(FEATURE_SAVE_DIR, exist_ok = True)
-    os.makedirs(integration_SAVE_DIR, exist_ok = True)
-
-    
-    feature_file_content = create_data_export(api_instance, featureFileName, featureVersionId)
-    feature_dest_path = os.path.abspath(os.path.join(FEATURE_SAVE_DIR, featureFileName))
-    empty_dir(FEATURE_SAVE_DIR)
-    with open(feature_dest_path, "wb") as f:
-        f.write(feature_file_content)
-        print(f"Successfully completed CSV Download: {feature_dest_path}")
-
-    ISSUE_DICT = get_issues_request(api_instance, featureFileName)
-
-    findingsDataFrame = pd.read_csv(feature_dest_path)
-
-    
-    trueRows = findingsDataFrame[findingsDataFrame["Has Comments"]].copy()
-    trueRows["IssueID"] = trueRows["InstanceID"].map(ISSUE_DICT)
-    matches = trueRows[trueRows["IssueID"].notna()]
-
-    
-    comments = []
-    for _, row in tqdm(matches.iterrows(), total = len(matches), desc = "Fetching comments", unit = "row"):
-        issue_id = row['IssueID']
-        comment = get_comment_request(api_instance, issue_id)
-        comments.append(comment)
-
-    matches['Comment'] = comments
-
-    
-    overlap = set(findingsDataFrame.columns).intersection(matches.columns) - {'Instance ID'}
-    matches_no_dupe = matches.drop(columns = overlap)
-
-    mergedDF = pd.merge(findingsDataFrame, matches_no_dupe, on = "Instance ID", how="outer")
-
-    mergedDF = mergedDF.drop(columns = 'Issue ID')
-    importantCols = ['Application', 'Application Version', 'Category', 'CWE', 'Primary Location', 'Line Number', 'Criticality', 'Tagged', 'Comment', 'Found Date']
-    full_order = importantCols + [col for col in mergedDF.columns if col not in importantCols]
-
-    mergedDF = mergedDF.reindex(columns = full_order)
-    mergedDF = mergedDF.sort_values(by = 'Criticality', ignore_index = True)
-
-    mergedDF.to_csv(feature_dest_pathm index = False)
-
-    
+    download_report(featureFileName, FEATURE_SAVE_DIR, api_instance, featureVersionId, 'feature')
     time.sleep(5)
-
-    
-    integration_file_content = create_data_export(api_instance, integrationFileName, integrationVersionId)
-    integration_dest_path = os.path.abspath(os.path,join(integration_SAVE_DIR, integrationFileName))
-    empty_dir(integration_SAVE_DIR)
-    with open(integration_dest_path, "wb") as f:
-        f.write(integration_file_content)
-        print(f"Successfully completed CSV Download: {integration_dest_path}")
+    download_report(integrationFileName, INTEGRATION_SAVE_DIR, api_instance, integrationVersionId, 'integration')
 
     try:
         run_codeReview_script()
