@@ -11,7 +11,6 @@ from enum import Enum
 from pathlib import Path
 
 import numpy as np
-import openpyxl
 import pandas as pd
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.styles.borders import Border, Side
@@ -133,8 +132,6 @@ def createReport():
     if integrationDF is None:
         return False
 
-    whitelistDF = integrationDF[(integrationDF['Tagged'] == 'Whitelist NOMINATED') | (integrationDF['Tagged'] == 'Whitelist APPROVED')]
-
     global featureFiles
     globoPath = featurePath + '/*'
     featureFiles = glob.glob(globoPath)
@@ -166,8 +163,6 @@ def createReport():
 
     reviewDF = reviewDF.reset_index(drop=True)
     integrationDF = integrationDF.drop(columns=['Instance ID'])
-
-    reviewDF = reviewDF[(reviewDF['Tagged'] != 'WhitelistNOMINATED') & (reviewDF['Tagged'] == 'Whitelist APPROVED')]
 
     cweTree = ET.parse('archive/mitre/cwe_data.xml')
     cweRoot = cweTree.getroot()
@@ -205,7 +200,7 @@ def formatReport(report):
     workbook = writer.book
     sheets = workbook.sheetnames
 
-    for sheet in range(len(sheets)):
+    for sheet in sheets:
         ws = workbook[sheet]
 
         for cell in ws['H']:
@@ -289,7 +284,7 @@ def archiveRptFiles():
 
     try:
         os.makedirs(fullDir)
-    except:
+    except FileExistsError:
         try:
             input(f"{YELLOW}A report folder for this branch already exists. Press [ENTER] to overwrite or [Ctrl +C] to cancel: {ENDCOLOR}")
         except KeyboardInterrupt:
@@ -331,8 +326,6 @@ def trackFindings():
         input(f"\nAfter fixing and mistakes in the cyberReview and saving the file, press [Eter] to continue")
     except KeyboardInterrupt:
         exit()
-
-    workbook = openpyxl.load_workbook(fullDir + reportName)
 
     trackingDF = pd.read_excel(fullDir + reportName, usecols=['Category', 'CWE', 'Line Number', 'Primary Location', 'Tagged', 'Preexisting Backlog', 'Full Filename'], sheet_name=1, header=2, skipfooter=2)
 

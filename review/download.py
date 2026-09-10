@@ -45,7 +45,7 @@ class FortifyApiExt(FortifyApi):
         exports = self._request('GET', '/api/v1/dataExports')
 
         if not exports.success:
-            raise RuntimeError(f"Failed to get list of exports: {fileName}: {response.message}")
+            raise RuntimeError(f"Failed to get list of exports: {srcFileName}: {exports.message}")
             return None
 
         data = exports.data.get('data', [])
